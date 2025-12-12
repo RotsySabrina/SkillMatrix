@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="SkillMatrix.Core/SkillMatrix.Core.csproj" />
+  <Project Path="SkillMatrix.Data/SkillMatrix.Data.csproj" />
+  <Project Path="SkillMatrix.Web/SkillMatrix.Web.csproj" />
+</Solution>

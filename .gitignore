@@ -1,0 +1,24 @@
+# Fichiers et dossiers de compilation (TRÈS IMPORTANT !)
+[Bb]in/
+[Oo]bj/
+# Les tests peuvent aussi avoir des dossiers de build
+[Tt]estResults/
+
+# Packages NuGet (ils sont restaurés automatiquement)
+.nuget/
+**/packages/*
+
+# Fichiers d'environnement Visual Studio
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Fichiers des outils de base de données
+*.mdf
+*.ldf
+
+# Fichiers de configuration utilisateur (secrets, etc.)
+appsettings.Development.json # S'il contient des secrets locaux
+ConnectedServices/
+Generated\ Files/

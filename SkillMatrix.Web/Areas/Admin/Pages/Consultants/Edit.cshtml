@@ -1,0 +1,52 @@
+@page
+@model SkillMatrix.Web.Areas_Admin_Pages_Consultants.EditModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>Consultant</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Consultant.Id" />
+            <div class="form-group">
+                <label asp-for="Consultant.Nom" class="control-label"></label>
+                <input asp-for="Consultant.Nom" class="form-control" />
+                <span asp-validation-for="Consultant.Nom" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Consultant.Prenom" class="control-label"></label>
+                <input asp-for="Consultant.Prenom" class="form-control" />
+                <span asp-validation-for="Consultant.Prenom" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Consultant.Titre" class="control-label"></label>
+                <input asp-for="Consultant.Titre" class="form-control" />
+                <span asp-validation-for="Consultant.Titre" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Consultant.ExperienceTotale" class="control-label"></label>
+                <input asp-for="Consultant.ExperienceTotale" class="form-control" />
+                <span asp-validation-for="Consultant.ExperienceTotale" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Consultant.Statut" class="control-label"></label>
+                <input asp-for="Consultant.Statut" class="form-control" />
+                <span asp-validation-for="Consultant.Statut" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-page="./Index">Back to List</a>
+</div>
+

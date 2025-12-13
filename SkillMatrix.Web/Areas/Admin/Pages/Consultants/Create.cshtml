@@ -1,0 +1,75 @@
+@page
+@model SkillMatrix.Web.Areas_Admin_Pages_Consultants.CreateModel
+
+        @{
+        ViewData["Title"] = "Create";
+        }
+        
+        <h1>Create</h1>
+        
+    <h4>Consultant</h4>
+    <hr />
+    <div class="row">
+    <div class="col-md-4">
+    <form method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Consultant.Nom" class="control-label"></label>
+                <input asp-for="Consultant.Nom" class="form-control" />
+                <span asp-validation-for="Consultant.Nom" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Consultant.Prenom" class="control-label"></label>
+                <input asp-for="Consultant.Prenom" class="form-control" />
+                <span asp-validation-for="Consultant.Prenom" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Consultant.Titre" class="control-label"></label>
+                <input asp-for="Consultant.Titre" class="form-control" />
+                <span asp-validation-for="Consultant.Titre" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Consultant.ExperienceTotale" class="control-label"></label>
+                <input asp-for="Consultant.ExperienceTotale" class="form-control" />
+                <span asp-validation-for="Consultant.ExperienceTotale" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Consultant.Statut" class="control-label"></label>
+                <input asp-for="Consultant.Statut" class="form-control" />
+                <span asp-validation-for="Consultant.Statut" class="text-danger"></span>
+            </div>
+            
+            <h3>Compétences</h3>
+            <div class="border p-3">
+                @for (int i = 0; i < Model.AssignedSkills.Count; i++)
+                {
+                    <div class="form-check">
+                        <input type="checkbox"
+                            name="selectedSkills"
+                            value="@Model.AssignedSkills[i].SkillId"
+                            id="skill_@Model.AssignedSkills[i].SkillId"
+                            class="form-check-input" />
+
+                        <label class="form-check-label" for="skill_@Model.AssignedSkills[i].SkillId">
+                            @Model.AssignedSkills[i].Name
+                        </label>
+
+                        <label class="ms-3">Niveau (1-5):</label>
+                        <input type="number"
+                            name="SkillLevels[@Model.AssignedSkills[i].SkillId]"
+                            value="@(Model.AssignedSkills[i].Level ?? 1)"
+                            min="1" max="5" style="width: 50px;" />
+                    </div>
+                }
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-page="Index">Back to List</a>
+</div>
+

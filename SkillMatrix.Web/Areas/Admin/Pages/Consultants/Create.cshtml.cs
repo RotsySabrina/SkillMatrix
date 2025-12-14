@@ -7,16 +7,20 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SkillMatrix.Core.Models;
 using SkillMatrix.Data.EF;
+using SkillMatrix.Data.Services;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace SkillMatrix.Web.Areas_Admin_Pages_Consultants
 {
     public class CreateModel : PageModel
     {
         private readonly SkillMatrix.Data.EF.ApplicationDbContext _context;
-
-        public CreateModel(SkillMatrix.Data.EF.ApplicationDbContext context)
+        private readonly ElasticSearchService _elasticService;
+        public CreateModel(SkillMatrix.Data.EF.ApplicationDbContext context,ElasticSearchService elasticService)
         {
             _context = context;
+            _elasticService = elasticService;
         }
 
         // Propriété pour stocker les compétences disponibles
@@ -82,6 +86,29 @@ namespace SkillMatrix.Web.Areas_Admin_Pages_Consultants
 
             _context.Consultants.Add(Consultant);
             await _context.SaveChangesAsync();
+
+            // 🛑 NOUVEAU CODE : Préparer et envoyer les données à Elastic
+
+            var newConsultant = await _context.Consultants
+                .Include(c => c.ConsultantSkills)
+                    .ThenInclude(cs => cs.Skill)
+                .FirstOrDefaultAsync(c => c.Id == Consultant.Id);
+                
+            if (newConsultant != null)
+            {
+                var searchDto = new SearchConsultantDto
+                {
+                    Id = newConsultant.Id,
+                    NomComplet = $"{newConsultant.Prenom} {newConsultant.Nom}",
+                    Titre = newConsultant.Titre,
+                    Statut = newConsultant.Statut,
+                    // Mapping des noms de compétences pour l'indexation
+                    Competences = newConsultant.ConsultantSkills.Select(cs => cs.Skill.Nom).ToList()
+                };
+
+                // 2. Appel au service d'indexation
+                await _elasticService.IndexConsultantAsync(searchDto);
+            }
 
             return RedirectToPage("./Index");
         }

@@ -59,6 +59,10 @@
                     <div class="card-footer">
                         <a href="#" class="btn btn-sm btn-primary">Voir Profil</a>
                     </div>
+                    @* 🛑 BOUTON EXPORT PDF *@
+                    <a asp-action="DownloadCv" asp-route-id="@consultant.Id" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-file-pdf"></i> Télécharger CV (PDF)
+                    </a>
                 </div>
             </div>
         }

@@ -1,8 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using SkillMatrix.Data.EF;
 using SkillMatrix.Data.Services;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// 🛑 ACTIVATION DE LA LICENCE GRATUITE
+QuestPDF.Settings.License = LicenseType.Community;
 
 // configure connection string via configuration (we'll add appsettings later)
 builder.Services.AddRazorPages();
@@ -19,6 +23,8 @@ builder.Services.AddScoped<AdoNetService>();
 //--end
 // 1. Ajoutez votre CsvImportService ici
 builder.Services.AddScoped<CsvImportService>();
+
+builder.Services.AddScoped<CvPdfService>();
 
 var elasticUrl = builder.Configuration.GetSection("ElasticSearch:Url").Value;
 

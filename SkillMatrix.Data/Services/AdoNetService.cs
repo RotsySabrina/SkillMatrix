@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration; // Pour lire la config (chaîne de connexion)
 using Microsoft.Data.SqlClient;             // Le client ADO.NET
 using SkillMatrix.Core.DTOs;
+using SkillMatrix.Core.Models;
 
 public class AdoNetService
 {
@@ -64,5 +65,58 @@ public class AdoNetService
             }
         }
         return (consultants, totalCount);
+    }
+
+    public async Task<Consultant?> GetConsultantDetailsAsync(int id)
+    {
+        Consultant? consultant = null;
+
+        // Requête pour récupérer le consultant ET ses skills via des JOIN
+        string sql = @"
+            SELECT c.Id, c.Nom, c.Prenom, c.Titre, c.ExperienceTotale, c.Statut,
+                s.Nom as SkillNom, cs.Niveau
+            FROM Consultants c
+            LEFT JOIN ConsultantSkills cs ON c.Id = cs.ConsultantId
+            LEFT JOIN Skills s ON cs.SkillId = s.Id
+            WHERE c.Id = @id";
+
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            using (var command = new SqlCommand(sql, connection))
+            {
+                command.Parameters.AddWithValue("@id", id);
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        if (consultant == null)
+                        {
+                            consultant = new Consultant
+                            {
+                                Id = reader.GetInt32(0),
+                                Nom = reader.GetString(1),
+                                Prenom = reader.GetString(2),
+                                Titre = reader.GetString(3),
+                                ExperienceTotale = reader.GetInt32(4),
+                                Statut = reader.GetString(5),
+                                ConsultantSkills = new List<ConsultantSkill>()
+                            };
+                        }
+
+                        // Si une compétence existe (LEFT JOIN peut retourner null)
+                        if (!reader.IsDBNull(6)) 
+                        {
+                            consultant.ConsultantSkills.Add(new ConsultantSkill
+                            {
+                                Skill = new Skill { Nom = reader.GetString(6) },
+                                Niveau = reader.GetInt32(7)
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        return consultant;
     }
 }

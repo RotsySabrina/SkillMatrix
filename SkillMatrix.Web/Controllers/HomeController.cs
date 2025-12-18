@@ -7,29 +7,13 @@ public class HomeController : Controller
 {
     private readonly AdoNetService _adoNetService;
     private readonly ElasticSearchService _elasticService; // 🛑 1. Ajouter le champ
-
-    public HomeController(AdoNetService adoNetService, ElasticSearchService elasticService)
+    private readonly CvPdfService _pdfService;
+    public HomeController(AdoNetService adoNetService, ElasticSearchService elasticService, CvPdfService pdfService)
     {
         _adoNetService = adoNetService;
         _elasticService = elasticService;
+        _pdfService = pdfService;
     }
-
-    /*public async Task<IActionResult> Index(int page = 1, int pageSize = 3) // Prend les paramètres de l'URL
-    {
-        var result = await _adoNetService.GetConsultantsAsync(page, pageSize);
-        
-        // Créer un ViewModel simple pour passer les données et les métadonnées de pagination
-        var viewModel = new ConsultantListViewModel
-        {
-            Consultants = result.Consultants,
-            CurrentPage = page,
-            PageSize = pageSize,
-            TotalCount = result.TotalCount,
-            TotalPages = (int)Math.Ceiling((double)result.TotalCount / pageSize)
-        };
-        
-        return View(viewModel);
-    }*/
 
     // 🛑 3. Modifier la méthode Index pour accepter 'searchQuery'
     public async Task<IActionResult> Index(string searchQuery, int page = 1, int pageSize = 3)
@@ -74,5 +58,43 @@ public class HomeController : Controller
 
         return View(viewModel);
     }
+
+    public async Task<IActionResult> DownloadCv(int id)
+    {
+        // 1. Récupération via ADO.NET au lieu de EF Core
+        var consultant = await _adoNetService.GetConsultantDetailsAsync(id);
+
+        if (consultant == null)
+        {
+            return NotFound("Consultant introuvable.");
+        }
+
+        // 2. Génération du PDF (Le service PDF reste identique)
+        var pdfBytes = _pdfService.GenerateAnonymousCv(consultant);
+
+        // 3. Retour du fichier anonymisé
+        return File(pdfBytes, "application/pdf", $"CV_Ref_{consultant.Id}.pdf");
+    }
+    //Avec EF Core
+   /* public async Task<IActionResult> DownloadCv(int id)
+    {
+        // 1. Récupération complète (Eager Loading)
+        var consultant = await _context.Consultants
+            .Include(c => c.ConsultantSkills)
+            .ThenInclude(cs => cs.Skill)
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (consultant == null)
+        {
+            return NotFound();
+        }
+
+        // 2. Génération du PDF
+        var pdfBytes = _pdfService.GenerateAnonymousCv(consultant);
+
+        // 3. Retour du fichier
+        // Le nom du fichier est aussi anonymisé : "CV_Ref_12.pdf"
+        return File(pdfBytes, "application/pdf", $"CV_Ref_{consultant.Id}.pdf");
+    }*/
 
 }

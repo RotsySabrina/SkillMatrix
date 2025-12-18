@@ -14,6 +14,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // register any Data services (if you create interfaces)
 //builder.Services.AddScoped<ISkillService, SkillMatrix.Data.Services.SkillService>(); // placeholder
 
+//front MVC
+builder.Services.AddScoped<AdoNetService>();
+//--end
+// 1. Ajoutez votre CsvImportService ici
+builder.Services.AddScoped<CsvImportService>();
+
 var elasticUrl = builder.Configuration.GetSection("ElasticSearch:Url").Value;
 
 if (!string.IsNullOrEmpty(elasticUrl))
@@ -36,12 +42,20 @@ if (!app.Environment.IsDevelopment())
 }
 
 
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
 app.UseAuthorization();
+
+//MVC
+// 🛑 AJOUTER CECI POUR DÉFINIR LE ROUTAGE MVC
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+//end
+
 
 app.MapRazorPages();
 app.MapControllers();

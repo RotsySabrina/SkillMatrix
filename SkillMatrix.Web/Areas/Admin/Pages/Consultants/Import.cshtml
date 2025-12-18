@@ -1,0 +1,25 @@
+@page
+@model SkillMatrix.Web.Areas_Admin_Pages_Consultants.ImportModel
+
+@{
+    ViewData["Title"] = "Importation CSV";
+}
+
+<div class="container mt-4">
+    <h2>Importer des Consultants via CSV</h2>
+    <div class="card p-4 shadow-sm">
+        <form method="post" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="csvFile" class="form-label">Sélectionnez le fichier .csv</label>
+                <input type="file" name="Upload" id="csvFile" class="form-control" accept=".csv" required />
+                <small class="text-muted">Format requis : Nom, Prenom, Titre, DescriptionProfil, Statut</small>
+            </div>
+            <button type="submit" class="btn btn-success">Lancer l'importation</button>
+        </form>
+
+        @if (Model.Message != null)
+        {
+            <div class="alert alert-info mt-3">@Model.Message</div>
+        }
+    </div>
+</div>

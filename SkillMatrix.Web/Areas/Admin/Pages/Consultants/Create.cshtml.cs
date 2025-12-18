@@ -9,7 +9,7 @@ using SkillMatrix.Core.Models;
 using SkillMatrix.Data.EF;
 using SkillMatrix.Data.Services;
 using Microsoft.EntityFrameworkCore;
-
+using SkillMatrix.Core.DTOs;
 
 namespace SkillMatrix.Web.Areas_Admin_Pages_Consultants
 {

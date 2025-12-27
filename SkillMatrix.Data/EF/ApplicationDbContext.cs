@@ -11,7 +11,7 @@ namespace SkillMatrix.Data.EF
         public DbSet<Consultant> Consultants => Set<Consultant>();
         public DbSet<Skill> Skills => Set<Skill>();
         public DbSet<ConsultantSkill> ConsultantSkills => Set<ConsultantSkill>();
-
+        public DbSet<User> Users { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

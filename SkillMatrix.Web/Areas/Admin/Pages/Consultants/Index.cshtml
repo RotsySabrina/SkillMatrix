@@ -5,60 +5,57 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="bi bi-people-fill me-2"></i>Gestion des Consultants</h2>
+        <a asp-page="Import" class="btn btn-outline-primary shadow-sm">
+            <i class="bi bi-file-earmark-arrow-up me-1"></i> Import CSV
+        </a>
+        <a asp-page="Create" class="btn btn-primary shadow-sm">
+            <i class="bi bi-plus-circle me-1"></i> Nouveau Consultant
+        </a>
+    </div>
 
-<p>
-    <a asp-page="Create">Create New</a>
-</p>
-<p>
-        <a asp-page="Import">Import CSV</a>
-</p>
-<hr />
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Consultant[0].Nom)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Consultant[0].Prenom)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Consultant[0].Titre)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Consultant[0].ExperienceTotale)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Consultant[0].Statut)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model.Consultant) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Nom)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Prenom)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Titre)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ExperienceTotale)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Statut)
-            </td>
-            <td>
-                <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-page="./Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Consultant</th>
+                        <th>Titre</th>
+                        <th>Statut</th>
+                        <th>Expérience</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Consultant) {
+                        <tr>
+                            <td class="ps-4 fw-semibold">@item.Prenom @item.Nom</td>
+                            <td>@item.Titre</td>
+                            <td>
+                                <span class="badge @(item.Statut == "Intercontrat" ? "bg-warning text-dark" : "bg-success")">
+                                    @item.Statut
+                                </span>
+                            </td>
+                            <td>@item.ExperienceTotale ans</td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group">
+                                    <a asp-page="./Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-page="./Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="Détails">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a asp-page="./Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

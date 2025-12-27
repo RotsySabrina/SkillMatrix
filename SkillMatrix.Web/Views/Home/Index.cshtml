@@ -1,95 +1,37 @@
-@* 📁 SkillMatrix.Web/Views/Home/Index.cshtml *@
-
-@* 🛑 DÉCLARATION DU MODÈLE : Liste des DTOs récupérés par le AdoNetService *@
-@* model List<SkillMatrix.Core.DTOs.ConsultantListingDto>*@
-
-@model SkillMatrix.Core.ViewModels.ConsultantListViewModel // Changement du modèle !
-
 @{
-    ViewData["Title"] = "Liste des Consultants";
-    Layout = "_Layout"; // Assurez-vous que le Layout existe et est référencé correctement
+    ViewData["Title"] = "Tableau de Bord";
 }
 
-<div class="container mt-5">
-    <h2>Catalogue des Consultants Disponibles</h2>
-    <p>Page @Model.CurrentPage de @Model.TotalPages (Total : @Model.TotalCount consultants)</p>
-    @* 🛑 BARRE DE RECHERCHE *@
+<div class="container py-4">
     <div class="row mb-4">
-        <div class="col-md-8 mx-auto">
-            <form method="get" asp-controller="Home" asp-action="Index">
-                <div class="input-group">
-                    <input type="text" name="searchQuery" class="form-control" 
-                           placeholder="Rechercher par compétence (C#, Java...), nom ou titre..." 
-                           value="@ViewData["CurrentSearch"]">
-                    <button class="btn btn-primary" type="submit">Rechercher</button>
-                    @if (ViewData["CurrentSearch"] != null)
-                    {
-                        <a asp-action="Index" class="btn btn-secondary">Réinitialiser</a>
-                    }
-                </div>
-            </form>
+        <div class="col-12">
+            <h2 class="fw-bold">Bienvenue sur SkillMatrix</h2>
+            <p class="text-muted">Plateforme de gestion et recherche de compétences.</p>
         </div>
-    <hr />
+    </div>
 
-    @* 🛑 LOGIQUE D'AFFICHAGE DU STATUT ET DES DONNÉES *@
-    <div class="row">
-        @foreach (var consultant in Model.Consultants)
+    <div class="row g-4">
+        @if (User.IsInRole("Admin"))
         {
-            // Définition de la classe CSS pour le statut
-            var statusClass = consultant.Statut == "Intercontrat" ? "border-success bg-light" : "border-secondary bg-white";
-
-            <div class="col-md-4 mb-4">
-                <div class="card h-100 @statusClass">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm bg-primary text-white">
                     <div class="card-body">
-                        
-                        <h5 class="card-title">@consultant.NomComplet</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">@consultant.Titre</h6>
-                        
-                        @* 🛑 MISE EN ÉVIDENCE DU STATUT *@
-                        @if (consultant.Statut == "Intercontrat")
-                        {
-                            <span class="badge bg-success mb-3">Disponible (Intercontrat)</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary mb-3">En Mission</span>
-                        }
-
+                        <h5>Gestion</h5>
+                        <p class="small opacity-75">Administrez les profils et les référentiels techniques.</p>
+                        <a asp-area="Admin" asp-page="/Consultants/Index" class="btn btn-light btn-sm mt-3">Accéder</a>
                     </div>
-                    <div class="card-footer">
-                        <a href="#" class="btn btn-sm btn-primary">Voir Profil</a>
-                    </div>
-                    @* 🛑 BOUTON EXPORT PDF *@
-                    <a asp-action="DownloadCv" asp-route-id="@consultant.Id" class="btn btn-sm btn-outline-danger">
-                        <i class="bi bi-file-pdf"></i> Télécharger CV (PDF)
-                    </a>
                 </div>
             </div>
         }
+
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="text-primary">Recherche Rapide</h5>
+                    <p class="text-muted small">Trouvez un consultant par compétence ou par nom.</p>
+                    <a asp-area="" asp-controller="Home" asp-action="Index" class="btn btn-outline-primary btn-sm mt-3">Chercher</a>
+                </div>
+            </div>
+        </div>
     </div>
-
-    @* 🛑 AJOUT DES BOUTONS DE PAGINATION *@
-    <nav aria-label="Pagination des Consultants">
-        <ul class="pagination justify-content-center">
-            
-            @* Lien Précédent *@
-            <li class="page-item @(Model.CurrentPage <= 1 ? "disabled" : "")">
-                <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)" asp-route-pageSize="@Model.PageSize">Précédent</a>
-            </li>
-
-            @* Boucle pour les numéros de page *@
-            @for (int i = 1; i <= Model.TotalPages; i++)
-            {
-                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
-                    <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-pageSize="@Model.PageSize">@i</a>
-                </li>
-            }
-
-            @* Lien Suivant *@
-            <li class="page-item @(Model.CurrentPage >= Model.TotalPages ? "disabled" : "")">
-                <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)" asp-route-pageSize="@Model.PageSize">Suivant</a>
-            </li>
-        </ul>
-    </nav>
-
 </div>

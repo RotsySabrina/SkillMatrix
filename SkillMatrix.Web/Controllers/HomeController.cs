@@ -3,6 +3,9 @@ using SkillMatrix.Data.Services;
 using SkillMatrix.Core.DTOs;
 using System.Threading.Tasks;
 using SkillMatrix.Core.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+
+[Authorize]
 public class HomeController : Controller
 {
     private readonly AdoNetService _adoNetService;
@@ -15,8 +18,21 @@ public class HomeController : Controller
         _pdfService = pdfService;
     }
 
-    // 🛑 3. Modifier la méthode Index pour accepter 'searchQuery'
-    public async Task<IActionResult> Index(string searchQuery, int page = 1, int pageSize = 3)
+    [AllowAnonymous]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult Error()
+    {
+        return View();
+    }
+
+    public IActionResult Index()
+    {
+        return View();
+    }
+
+
+
+    public async Task<IActionResult> ConsultantsList(string searchQuery, int page = 1, int pageSize = 3)
     {
         var viewModel = new ConsultantListViewModel
         {

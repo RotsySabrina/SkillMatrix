@@ -1,75 +1,129 @@
 @page
 @model SkillMatrix.Web.Areas_Admin_Pages_Consultants.CreateModel
 
-        @{
-        ViewData["Title"] = "Create";
-        }
-        
-        <h1>Create</h1>
-        
-    <h4>Consultant</h4>
-    <hr />
-    <div class="row">
-    <div class="col-md-4">
-    <form method="post">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Consultant.Nom" class="control-label"></label>
-                <input asp-for="Consultant.Nom" class="form-control" />
-                <span asp-validation-for="Consultant.Nom" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Consultant.Prenom" class="control-label"></label>
-                <input asp-for="Consultant.Prenom" class="form-control" />
-                <span asp-validation-for="Consultant.Prenom" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Consultant.Titre" class="control-label"></label>
-                <input asp-for="Consultant.Titre" class="form-control" />
-                <span asp-validation-for="Consultant.Titre" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Consultant.ExperienceTotale" class="control-label"></label>
-                <input asp-for="Consultant.ExperienceTotale" class="form-control" />
-                <span asp-validation-for="Consultant.ExperienceTotale" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Consultant.Statut" class="control-label"></label>
-                <input asp-for="Consultant.Statut" class="form-control" />
-                <span asp-validation-for="Consultant.Statut" class="text-danger"></span>
-            </div>
-            
-            <h3>Compétences</h3>
-            <div class="border p-3">
-                @for (int i = 0; i < Model.AssignedSkills.Count; i++)
-                {
-                    <div class="form-check">
-                        <input type="checkbox"
-                            name="selectedSkills"
-                            value="@Model.AssignedSkills[i].SkillId"
-                            id="skill_@Model.AssignedSkills[i].SkillId"
-                            class="form-check-input" />
+@{
+    ViewData["Title"] = "Nouveau Consultant";
+}
 
-                        <label class="form-check-label" for="skill_@Model.AssignedSkills[i].SkillId">
-                            @Model.AssignedSkills[i].Name
-                        </label>
-
-                        <label class="ms-3">Niveau (1-5):</label>
-                        <input type="number"
-                            name="SkillLevels[@Model.AssignedSkills[i].SkillId]"
-                            value="@(Model.AssignedSkills[i].Level ?? 1)"
-                            min="1" max="5" style="width: 50px;" />
-                    </div>
-                }
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a asp-page="Index">Consultants</a></li>
+                    <li class="breadcrumb-item active">Création</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold text-dark"><i class="bi bi-person-plus-fill me-2"></i>Nouveau Consultant</h2>
+        </div>
+        <a asp-page="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Retour à la liste
+        </a>
     </div>
-</div>
 
-<div>
-    <a asp-page="Index">Back to List</a>
-</div>
+    <form method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger shadow-sm" role="alert"></div>
 
+        <div class="row">
+            <div class="col-lg-7">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="card-title mb-0 fw-bold"><i class="bi bi-info-circle me-2 text-primary"></i>Informations Générales</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Consultant.Prenom" class="form-label fw-semibold"></label>
+                                <input asp-for="Consultant.Prenom" class="form-control rounded-pill" placeholder="Prénom" />
+                                <span asp-validation-for="Consultant.Prenom" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Consultant.Nom" class="form-label fw-semibold"></label>
+                                <input asp-for="Consultant.Nom" class="form-control rounded-pill" placeholder="Nom" />
+                                <span asp-validation-for="Consultant.Nom" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Consultant.Titre" class="form-label fw-semibold"></label>
+                            <input asp-for="Consultant.Titre" class="form-control rounded-pill" placeholder="Ex: Architecte Cloud Senior" />
+                            <span asp-validation-for="Consultant.Titre" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Consultant.Statut" class="form-label fw-semibold"></label>
+                                <select asp-for="Consultant.Statut" class="form-select rounded-pill">
+                                    <option value="Disponible">Disponible</option>
+                                    <option value="En Mission">En Mission</option>
+                                    <option value="Intercontrat">Intercontrat</option>
+                                </select>
+                                <span asp-validation-for="Consultant.Statut" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Consultant.ExperienceTotale" class="form-label fw-semibold"></label>
+                                <div class="input-group">
+                                    <input asp-for="Consultant.ExperienceTotale" class="form-control rounded-start-pill" />
+                                    <span class="input-group-text rounded-end-pill">ans</span>
+                                </div>
+                                <span asp-validation-for="Consultant.ExperienceTotale" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="card-title mb-0 fw-bold"><i class="bi bi-star-fill me-2 text-warning"></i>Compétences & Niveaux</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush" style="max-height: 450px; overflow-y: auto;">
+                            @for (int i = 0; i < Model.AssignedSkills.Count; i++)
+                            {
+                                <div class="list-group-item py-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="form-check">
+                                            <input type="checkbox"
+                                                   name="selectedSkills"
+                                                   value="@Model.AssignedSkills[i].SkillId"
+                                                   id="skill_@Model.AssignedSkills[i].SkillId"
+                                                   class="form-check-input" />
+                                            <label class="form-check-label fw-medium" for="skill_@Model.AssignedSkills[i].SkillId">
+                                                @Model.AssignedSkills[i].Name
+                                            </label>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <small class="text-muted me-2">Niveau:</small>
+                                            <input type="range" 
+                                                   class="form-range" 
+                                                   name="SkillLevels[@Model.AssignedSkills[i].SkillId]"
+                                                   value="@(Model.AssignedSkills[i].Level ?? 1)"
+                                                   min="1" max="5" 
+                                                   style="width: 80px;"
+                                                   oninput="this.nextElementSibling.value = this.value">
+                                            <output class="badge bg-primary ms-2">@(Model.AssignedSkills[i].Level ?? 1)</output>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light text-center py-2">
+                        <small class="text-muted">Cochez les compétences possédées</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body d-flex justify-content-end gap-2">
+                <button type="reset" class="btn btn-light px-4">Réinitialiser</button>
+                <button type="submit" class="btn btn-primary px-5 shadow-sm">
+                    <i class="bi bi-check-circle me-1"></i> Créer le profil
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

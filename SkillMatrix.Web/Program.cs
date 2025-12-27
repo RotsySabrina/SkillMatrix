@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using SkillMatrix.Data.EF;
 using SkillMatrix.Data.Services;
+using SkillMatrix.Core.Models;
 using QuestPDF.Infrastructure;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,9 +17,7 @@ builder.Services.AddControllersWithViews(); // for MVC parts / API controllers
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// register any Data services (if you create interfaces)
-//builder.Services.AddScoped<ISkillService, SkillMatrix.Data.Services.SkillService>(); // placeholder
-
+builder.Services.AddScoped<AuthService>();
 //front MVC
 builder.Services.AddScoped<AdoNetService>();
 //--end
@@ -25,6 +25,14 @@ builder.Services.AddScoped<AdoNetService>();
 builder.Services.AddScoped<CsvImportService>();
 
 builder.Services.AddScoped<CvPdfService>();
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login"; // Où aller si on n'est pas connecté
+        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(8); // Durée de la session
+    });
 
 var elasticUrl = builder.Configuration.GetSection("ElasticSearch:Url").Value;
 
@@ -39,11 +47,36 @@ else
     Console.WriteLine("Attention : L'URL d'Elasticsearch n'est pas configurée.");
 }
 
+
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    app.UseExceptionHandler("/Error");
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var auth = scope.ServiceProvider.GetRequiredService<AuthService>();
+
+    if (!context.Users.Any())
+    {
+        // 1. ADMIN
+        var admin = new User { Email="admin@skillmatrix.com", NomComplet="Jean Admin", Role="Admin" };
+        admin.PasswordHash = auth.HashPassword(admin, "Admin123");
+        
+        // 2. RECRUTEUR (Simple utilisateur)
+        var user = new User { Email="recrut@skillmatrix.com", NomComplet="Marie Recruteur", Role="User" };
+        user.PasswordHash = auth.HashPassword(user, "User123");
+
+        context.Users.AddRange(admin, user);
+        context.SaveChanges();
+    }
+}
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage(); 
+}
+else
+{
+    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
@@ -55,12 +88,10 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
 
-//MVC
-// 🛑 AJOUTER CECI POUR DÉFINIR LE ROUTAGE MVC
+//ROUTAGE MVC
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-//end
 
 
 app.MapRazorPages();

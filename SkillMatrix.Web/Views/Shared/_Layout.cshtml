@@ -71,14 +71,13 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <div class="bg-white text-primary rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 32px; height: 32px;">
-                                <strong>AD</strong> </div>
-                            <span>Administrateur</span>
+                                <strong></strong> </div>
+                            <span>@User.Identity.Name</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end border-0 shadow" aria-labelledby="userDropdown">
                             @if (User.Identity.IsAuthenticated)
                             {
                                 <li class="nav-item border-start ps-3">
-                                    <span class="navbar-text me-3 text-white">Bonjour, <strong>@User.Identity.Name</strong></span>
                                     <a class="btn btn-sm btn-light rounded-pill shadow-sm" asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right me-1"></i>Déconnexion</a>
                                 </li>
                             }

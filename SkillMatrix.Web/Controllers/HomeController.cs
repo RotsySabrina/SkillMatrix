@@ -25,9 +25,11 @@ public class HomeController : Controller
         return View();
     }
 
-    public IActionResult Index()
+    [Authorize]
+    public async Task<IActionResult> Index()
     {
-        return View();
+        var model = await _adoNetService.GetDashboardStatsAsync();
+        return View(model);
     }
 
 

@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration; // Pour lire la config (chaîne de con
 using Microsoft.Data.SqlClient;             // Le client ADO.NET
 using SkillMatrix.Core.DTOs;
 using SkillMatrix.Core.Models;
+using SkillMatrix.Core.ViewModels;
 
 public class AdoNetService
 {
@@ -13,7 +14,6 @@ public class AdoNetService
         _connectionString = configuration.GetConnectionString("DefaultConnection");
     }
 
-    // 2. Méthode pour lire les données brutes (sans EF Core)
     public async Task<(List<ConsultantListingDto> Consultants, int TotalCount)> GetConsultantsAsync(int page = 1, int pageSize = 3)
     {
         var consultants = new List<ConsultantListingDto>();
@@ -118,5 +118,55 @@ public class AdoNetService
             }
         }
         return consultant;
+    }
+
+    public async Task<DashboardViewModel> GetDashboardStatsAsync()
+    {
+        var stats = new DashboardViewModel();
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+
+            // 1. Compteurs par statut
+            string sqlStats = @"
+                SELECT Statut, COUNT(*) as Total 
+                FROM Consultants 
+                GROUP BY Statut;
+                
+                SELECT TOP 5 s.Nom, COUNT(cs.ConsultantId) as UsageCount
+                FROM Skills s
+                JOIN ConsultantSkills cs ON s.Id = cs.SkillId
+                GROUP BY s.Nom
+                ORDER BY UsageCount DESC;";
+
+            using (var command = new SqlCommand(sqlStats, connection))
+            using (var reader = await command.ExecuteReaderAsync())
+            {
+                // Lecture des statuts
+                while (await reader.ReadAsync())
+                {
+                    string status = reader.GetString(0);
+                    int count = reader.GetInt32(1);
+                    stats.TotalConsultants += count;
+
+                    if (status == "En Mission") stats.EnMissionCount = count;
+                    else if (status == "Disponible") stats.DisponibleCount = count;
+                    else if (status == "Intercontrat") stats.IntercontratCount = count;
+                }
+
+                // Lecture du Top Skills (Résultat suivant)
+                if (await reader.NextResultAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        stats.TopSkills.Add(new SkillStat { 
+                            SkillNom = reader.GetString(0), 
+                            Count = reader.GetInt32(1) 
+                        });
+                    }
+                }
+            }
+        }
+        return stats;
     }
 }

@@ -1,4 +1,3 @@
-// 📁 SkillMatrix.Core/ViewModels/ConsultantListViewModel.cs
 using SkillMatrix.Core.DTOs;
 using System.Collections.Generic;
 

@@ -10,5 +10,6 @@ namespace SkillMatrix.Core.Models
         public string Statut { get; set; } = ""; // "En Mission", "Intercontrat", etc.
 
         public ICollection<ConsultantSkill>? ConsultantSkills { get; set; }
+        public List<Mission> Missions { get; set; } = new();
     }
 }

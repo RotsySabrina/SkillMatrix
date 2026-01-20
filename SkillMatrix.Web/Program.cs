@@ -66,8 +66,18 @@ using (var scope = app.Services.CreateScope())
         user.PasswordHash = auth.HashPassword(user, "User123");
 
         context.Users.AddRange(admin, user);
-        context.SaveChanges();
     }
+    // 2. SEED DES CLIENTS 
+    if (!context.Clients.Any())
+    {
+        context.Clients.AddRange(
+            new Client { Nom = "BNP Paribas", SecteurActivite = "Banque" },
+            new Client { Nom = "Orange", SecteurActivite = "Télécom" },
+            new Client { Nom = "TotalEnergies", SecteurActivite = "Énergie" },
+            new Client { Nom = "LVMH", SecteurActivite = "Luxe" }
+        );
+    }
+    context.SaveChanges();
 }
 
 if (app.Environment.IsDevelopment())

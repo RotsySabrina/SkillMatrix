@@ -12,6 +12,9 @@ namespace SkillMatrix.Data.EF
         public DbSet<Skill> Skills => Set<Skill>();
         public DbSet<ConsultantSkill> ConsultantSkills => Set<ConsultantSkill>();
         public DbSet<User> Users { get; set; }
+        public DbSet<Client> Clients { get; set; }
+        public DbSet<Mission> Missions { get; set; }
+        public DbSet<MissionSkill> MissionSkills { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -28,6 +31,14 @@ namespace SkillMatrix.Data.EF
                 .HasOne(cs => cs.Skill)
                 .WithMany(s => s.ConsultantSkills)
                 .HasForeignKey(cs => cs.SkillId);
+
+            modelBuilder.Entity<MissionSkill>()
+                .HasKey(ms => new { ms.MissionId, ms.SkillId });
+            
+            modelBuilder.Entity<Mission>()
+                .HasOne(m => m.Consultant)
+                .WithMany(c => c.Missions)
+                .HasForeignKey(m => m.ConsultantId);
         }
     }
 }

@@ -9,86 +9,99 @@ namespace SkillMatrix.Data.Services
     {
         public byte[] GenerateAnonymousCv(Consultant consultant)
         {
-            // On crée le document
             var document = Document.Create(container =>
             {
                 container.Page(page =>
                 {
                     page.Size(PageSizes.A4);
-                    page.Margin(2, Unit.Centimetre);
+                    page.Margin(1.5f, Unit.Centimetre);
                     page.PageColor(Colors.White);
-                    page.DefaultTextStyle(x => x.FontSize(12));
+                    page.DefaultTextStyle(x => x.FontSize(11).FontFamily(Fonts.Verdana));
 
-                    // 1. En-tête (Header)
-                    page.Header()
-                        .Text($"DOSSIER DE COMPÉTENCES - Réf: {consultant.Id}")
-                        .SemiBold().FontSize(20).FontColor(Colors.Blue.Medium);
-
-                    // 2. Contenu (Content)
-                    page.Content().PaddingVertical(1, Unit.Centimetre).Column(col =>
+                    // --- 1. EN-TÊTE ---
+                    page.Header().Row(row =>
                     {
-                        // Titre du poste et Expérience
-                        col.Item().Text(consultant.Titre).FontSize(16).Bold();
-                        col.Item().Text($"{consultant.ExperienceTotale} ans d'expérience").FontSize(14).Italic().FontColor(Colors.Grey.Medium);
-                        
-                        col.Item().PaddingVertical(10).LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
+                        row.RelativeItem().Column(col =>
+                        {
+                            col.Item().Text($"{consultant.Prenom} {consultant.Nom}").FontSize(24).SemiBold().FontColor(Colors.Blue.Medium);
+                            col.Item().Text(consultant.Titre).FontSize(16).Italic();
+                        });
 
-                        // Section Compétences Techniques
-                        col.Item().Text("Compétences Techniques").FontSize(14).Bold().Underline();
-                        col.Item().PaddingTop(5);
+                        row.ConstantItem(100).Column(col =>
+                        {
+                            col.Item().Text($"Réf: {consultant.Id}").AlignRight().FontSize(10).FontColor(Colors.Grey.Medium);
+                            col.Item().Text(consultant.Statut).AlignRight().FontSize(10).Bold();
+                        });
+                    });
 
-                        // Tableau des compétences
+                    // --- 2. CONTENU ---
+                    page.Content().PaddingVertical(0.5f, Unit.Centimetre).Column(col =>
+                    {
+
+                        // --- SECTION COMPÉTENCES ---
+                        col.Item().Text("COMPÉTENCES TECHNIQUES").FontSize(14).Bold().FontColor(Colors.Blue.Medium);
+                        col.Item().PaddingTop(2).PaddingBottom(5).LineHorizontal(1).LineColor(Colors.Blue.Medium);
+
                         col.Item().Table(table =>
                         {
-                            // Définition des colonnes
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.RelativeColumn(); // Nom de la compétence
-                                columns.ConstantColumn(100); // Niveau (Barre ou Texte)
+                                columns.RelativeColumn();
+                                columns.ConstantColumn(100);
                             });
 
-                            // En-têtes du tableau
-                            table.Header(header =>
-                            {
-                                header.Cell().Text("Technologie").Bold();
-                                header.Cell().Text("Niveau (1-5)").Bold();
-                            });
-
-                            // Remplissage des lignes avec les compétences du consultant
                             if (consultant.ConsultantSkills != null)
                             {
                                 foreach (var skillLink in consultant.ConsultantSkills)
                                 {
-                                    table.Cell().PaddingVertical(2).Text(skillLink.Skill?.Nom ?? "Inconnu");
-                                    
-                                    // Affichage visuel du niveau (ex: "4/5")
-                                    table.Cell().PaddingVertical(2).AlignRight().Text($"{skillLink.Niveau}/5");
+                                    table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).PaddingVertical(2).Text(skillLink.Skill?.Nom);
+                                    table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3).PaddingVertical(2).AlignRight().Text($"{skillLink.Niveau} / 5");
                                 }
                             }
                         });
 
                         col.Item().PaddingVertical(15);
 
-                        // Section Statut (Optionnel)
-                        col.Item().Background(Colors.Grey.Lighten4).Padding(10).Column(c => 
+                        // --- SECTION EXPÉRIENCES (MISSIONS) ---
+                        col.Item().Text("EXPÉRIENCES PROFESSIONNELLES").FontSize(14).Bold().FontColor(Colors.Blue.Medium);
+                        col.Item().PaddingTop(2).PaddingBottom(10).LineHorizontal(1).LineColor(Colors.Blue.Medium);
+
+                        if (consultant.Missions != null && consultant.Missions.Any())
                         {
-                            c.Item().Text("Informations de Disponibilité").Bold();
-                            c.Item().Text($"Statut actuel : {consultant.Statut}");
-                        });
+                            foreach (var mission in consultant.Missions)
+                            {
+                                col.Item().PaddingBottom(15).Column(mCol =>
+                                {
+                                    mCol.Item().Row(row =>
+                                    {
+                                        row.RelativeItem().Text(mission.TitreProjet).Bold().FontSize(12);
+                                        row.ConstantItem(150).AlignRight().Text($"{mission.DateDebut:MM/yyyy} - {(mission.DateFin.HasValue ? mission.DateFin.Value.ToString("MM/yyyy") : "Prèsent")}").FontSize(10);
+                                    });
+
+                                    mCol.Item().Text($"{mission.Client?.Nom} | {mission.RoleOccupe}").Italic().FontColor(Colors.Grey.Darken2);
+                                    
+                                    if (!string.IsNullOrEmpty(mission.Description))
+                                    {
+                                        mCol.Item().PaddingTop(5).Text(mission.Description).FontSize(10).Justify();
+                                    }
+                                });
+                            }
+                        }
+                        else
+                        {
+                            col.Item().Text("Aucune expérience enregistrée.").Italic();
+                        }
                     });
 
-                    // 3. Pied de page (Footer)
-                    page.Footer()
-                        .AlignCenter()
-                        .Text(x =>
-                        {
-                            x.Span("Généré par SkillMatrix - ");
-                            x.CurrentPageNumber();
-                        });
+                    // --- 3. PIED DE PAGE ---
+                    page.Footer().AlignCenter().Text(x =>
+                    {
+                        x.Span("SkillMatrix - Document confidentiel - Page ");
+                        x.CurrentPageNumber();
+                    });
                 });
             });
 
-            // Retourne le PDF sous forme de tableau d'octets
             return document.GeneratePdf();
         }
     }

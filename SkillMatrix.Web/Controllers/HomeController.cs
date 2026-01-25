@@ -32,42 +32,43 @@ public class HomeController : Controller
         return View(model);
     }
 
-
-
     public async Task<IActionResult> ConsultantsList(string searchQuery, int page = 1, int pageSize = 3)
     {
-        var viewModel = new ConsultantListViewModel
-        {
-            CurrentPage = page,
-            PageSize = pageSize
-        };
+        var viewModel = new ConsultantListViewModel { CurrentPage = page, PageSize = pageSize };
 
-        // SCÉNARIO A : RECHERCHE ACTIVE (Via Elasticsearch)
+        // 1. Mise à jour forcée des statuts périmés en SQL (Source de vérité)
+        await _adoNetService.UpdateExpiredStatusesAsync();
+
         if (!string.IsNullOrWhiteSpace(searchQuery))
         {
+            // 2. Recherche textuelle dans Elastic
             var elasticResults = await _elasticService.SearchConsultantsAsync(searchQuery);
+            var ids = elasticResults.Select(e => e.Id).ToList();
 
-            // Mapping manuel : Convertir SearchConsultantDto (Elastic) vers ConsultantListingDto (Affichage)
-            viewModel.Consultants = elasticResults.Select(e => new ConsultantListingDto
-            {
+            // 3. Récupération des statuts RÉELS depuis SQL pour ces IDs
+            var realStatuses = await _adoNetService.GetRealtimeStatusesAsync(ids);
+
+            viewModel.Consultants = elasticResults.Select(e => new ConsultantListingDto {
                 Id = e.Id,
                 NomComplet = e.NomComplet,
                 Titre = e.Titre,
-                Statut = e.Statut,
-                //DescriptionCourte = e.DescriptionProfil.Length > 50 ? e.DescriptionProfil.Substring(0, 50) + "..." : e.DescriptionProfil,
-                // On peut ajouter les compétences dans la description pour l'affichage recherche
-                //DescriptionCourte = $"Skills: {string.Join(", ", e.Competences)}" 
+                // On affiche le statut SQL si dispo, sinon celui d'Elastic
+                Statut = realStatuses.ContainsKey(e.Id) ? realStatuses[e.Id] : e.Statut,
+                Competences = e.Competences 
             }).ToList();
 
             viewModel.TotalCount = elasticResults.Count;
-            viewModel.TotalPages = 1; // Pas de pagination complexe pour la recherche pour l'instant
-            
-            // On renvoie le terme de recherche à la vue pour l'afficher dans la barre
-            ViewData["CurrentSearch"] = searchQuery; 
+            viewModel.TotalPages = 1;
+            ViewData["CurrentSearch"] = searchQuery;
+
+            // 4. Synchronisation asynchrone pour mettre à jour Elastic pour la prochaine fois
+            _ = _elasticService.SyncAllConsultantsAsync(viewModel.Consultants.Select(c => new SearchConsultantDto {
+                Id = c.Id, NomComplet = c.NomComplet, Titre = c.Titre, Statut = c.Statut,Competences = c.Competences
+            }));
         }
-        // SCÉNARIO B : LISTING CLASSIQUE (Via ADO.NET)
         else
         {
+            // Listing classique via SQL
             var result = await _adoNetService.GetConsultantsAsync(page, pageSize);
             viewModel.Consultants = result.Consultants;
             viewModel.TotalCount = result.TotalCount;
@@ -79,7 +80,6 @@ public class HomeController : Controller
 
     public async Task<IActionResult> DownloadCv(int id)
     {
-        // 1. Récupération via ADO.NET au lieu de EF Core
         var consultant = await _adoNetService.GetConsultantDetailsAsync(id);
 
         if (consultant == null)
@@ -87,32 +87,21 @@ public class HomeController : Controller
             return NotFound("Consultant introuvable.");
         }
 
-        // 2. Génération du PDF (Le service PDF reste identique)
         var pdfBytes = _pdfService.GenerateAnonymousCv(consultant);
 
-        // 3. Retour du fichier anonymisé
         return File(pdfBytes, "application/pdf", $"CV_Ref_{consultant.Id}.pdf");
     }
-    //Avec EF Core
-   /* public async Task<IActionResult> DownloadCv(int id)
+
+    public async Task<IActionResult> Details(int id)
     {
-        // 1. Récupération complète (Eager Loading)
-        var consultant = await _context.Consultants
-            .Include(c => c.ConsultantSkills)
-            .ThenInclude(cs => cs.Skill)
-            .FirstOrDefaultAsync(c => c.Id == id);
+        var consultant = await _adoNetService.GetConsultantDetailsAsync(id);
 
         if (consultant == null)
         {
             return NotFound();
         }
 
-        // 2. Génération du PDF
-        var pdfBytes = _pdfService.GenerateAnonymousCv(consultant);
-
-        // 3. Retour du fichier
-        // Le nom du fichier est aussi anonymisé : "CV_Ref_12.pdf"
-        return File(pdfBytes, "application/pdf", $"CV_Ref_{consultant.Id}.pdf");
-    }*/
+        return View(consultant);
+    }
 
 }

@@ -23,21 +23,22 @@ namespace SkillMatrix.Web.Areas_Admin_Pages_Consultants
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var consultant = await _context.Consultants.FirstOrDefaultAsync(m => m.Id == id);
+            var consultant = await _context.Consultants
+                .Include(c => c.Missions)
+                    .ThenInclude(m => m.Client)
+                .Include(c => c.ConsultantSkills)
+                    .ThenInclude(cs => cs.Skill)
+                .FirstOrDefaultAsync(m => m.Id == id);
 
-            if (consultant is not null)
-            {
-                Consultant = consultant;
+            if (consultant == null) return NotFound();
+            
+            // Trie les missions de la plus récente à la plus ancienne
+            consultant.Missions = consultant.Missions.OrderByDescending(m => m.DateDebut).ToList();
+            Consultant = consultant;
 
-                return Page();
-            }
-
-            return NotFound();
+            return Page();
         }
     }
 }

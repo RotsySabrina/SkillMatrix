@@ -2,60 +2,157 @@
 @model SkillMatrix.Web.Areas_Admin_Pages_Consultants.IndexModel
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Répertoire des Consultants";
 }
 
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold"><i class="bi bi-people-fill me-2"></i>Gestion des Consultants</h2>
-        <a asp-page="Import" class="btn btn-outline-primary shadow-sm">
-            <i class="bi bi-file-earmark-arrow-up me-1"></i> Import CSV
-        </a>
-        <a asp-page="Create" class="btn btn-primary shadow-sm">
-            <i class="bi bi-plus-circle me-1"></i> Nouveau Consultant
-        </a>
+<div class="container-fluid mt-4 pb-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Consultants</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-0"><i class="bi bi-people-fill text-primary me-2"></i>Effectif Consultants</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-page="Import" class="btn btn-outline-secondary shadow-sm">
+                <i class="bi bi-file-earmark-arrow-up me-1"></i> Import CSV
+            </a>
+            <a asp-page="Create" class="btn btn-primary shadow-sm px-4">
+                <i class="bi bi-plus-lg me-1"></i> Nouveau Consultant
+            </a>
+            <form method="post" asp-page-handler="SyncAllToElastic" class="mb-3">
+                <button type="submit" class="btn btn-warning">
+                    <i class="bi bi-arrow-repeat"></i> Synchroniser tout vers Elasticsearch
+                </button>
+            </form>
+
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+                }
+        </div>
     </div>
 
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0 overflow-hidden">
         <div class="card-body p-0">
-            <table class="table table-hover table-striped mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th class="ps-4">Consultant</th>
-                        <th>Titre</th>
-                        <th>Statut</th>
-                        <th>Expérience</th>
-                        <th class="text-end pe-4">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model.Consultant) {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light border-bottom">
                         <tr>
-                            <td class="ps-4 fw-semibold">@item.Prenom @item.Nom</td>
-                            <td>@item.Titre</td>
-                            <td>
-                                <span class="badge @(item.Statut == "Intercontrat" ? "bg-warning text-dark" : "bg-success")">
-                                    @item.Statut
-                                </span>
-                            </td>
-                            <td>@item.ExperienceTotale ans</td>
-                            <td class="text-end pe-4">
-                                <div class="btn-group">
-                                    <a asp-page="./Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary" title="Modifier">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <a asp-page="./Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="Détails">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a asp-page="./Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Supprimer">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                </div>
-                            </td>
+                            <th class="ps-4 py-3 text-uppercase fs-xs text-muted fw-bold" style="width: 30%;">Consultant</th>
+                            <th class="py-3 text-uppercase fs-xs text-muted fw-bold">Statut</th>
+                            <th class="py-3 text-uppercase fs-xs text-muted fw-bold">Client Actuel</th>
+                            <th class="py-3 text-uppercase fs-xs text-muted fw-bold">Expérience</th>
+                            <th class="text-end pe-4 py-3 text-uppercase fs-xs text-muted fw-bold">Actions</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Consultant)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle me-3 bg-primary bg-opacity-10 text-primary fw-bold">
+                                            @(item.Prenom.Substring(0, 1))@(item.Nom.Substring(0, 1))
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">@item.Prenom @item.Nom</div>
+                                            <div class="text-muted small">@item.Titre</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    @{
+                                        var badgeClass = item.Statut switch
+                                        {
+                                            "En Mission" => "bg-success",
+                                            "Intercontrat" => "bg-warning text-dark",
+                                            _ => "bg-info text-white"
+                                        };
+                                    }
+                                    <span class="badge rounded-pill @badgeClass px-3 py-2">
+                                        <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> @item.Statut
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (item.Statut == "En Mission")
+                                    {
+                                        // On cherche la mission en cours (DateFin est nulle ou future)
+                                        var missionActuelle = item.Missions?.FirstOrDefault(m => m.DateFin == null || m.DateFin >= DateTime.Today);
+                                        if (missionActuelle?.Client != null)
+                                        {
+                                            <span class="text-dark fw-medium"><i class="bi bi-building me-1"></i> @missionActuelle.Client.Nom</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small italic">Données client manquantes</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-2">@item.ExperienceTotale ans</span>
+                                        <div class="progress w-50" style="height: 4px;">
+                                            @{ var progress = Math.Min(item.ExperienceTotale * 5, 100); }
+                                            <div class="progress-bar bg-primary" style="width: @progress%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group shadow-sm">
+                                        <a asp-page="./Details" asp-route-id="@item.Id" class="btn btn-white btn-sm border" title="Voir profil">
+                                            <i class="bi bi-eye text-info"></i>
+                                        </a>
+                                        <a asp-page="./Edit" asp-route-id="@item.Id" class="btn btn-white btn-sm border" title="Modifier">
+                                            <i class="bi bi-pencil-square text-secondary"></i>
+                                        </a>
+                                        <a asp-page="./Delete" asp-route-id="@item.Id" class="btn btn-white btn-sm border" title="Supprimer">
+                                            <i class="bi bi-trash text-danger"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+    .avatar-circle {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 0.9rem;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .fs-xs {
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.02);
+        transition: background-color 0.2s ease;
+    }
+
+    .btn-white {
+        background-color: #fff;
+    }
+    .btn-white:hover {
+        background-color: #f8f9fa;
+    }
+</style>

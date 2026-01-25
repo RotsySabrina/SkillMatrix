@@ -2,51 +2,173 @@
 @model SkillMatrix.Web.Areas_Admin_Pages_Consultants.EditModel
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Modifier Consultant";
 }
 
-<h1>Edit</h1>
+<div class="container pb-5">
+    <h1>Modifier le Profil</h1>
+    <h4>@Model.Consultant.Prenom @Model.Consultant.Nom</h4>
+    <hr />
 
-<h4>Consultant</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Consultant.Id" />
-            <div class="form-group">
-                <label asp-for="Consultant.Nom" class="control-label"></label>
-                <input asp-for="Consultant.Nom" class="form-control" />
-                <span asp-validation-for="Consultant.Nom" class="text-danger"></span>
+    <form method="post">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">Informations Générales</h5>
+                    </div>
+                    <div class="card-body">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="Consultant.Id" />
+                        
+                        <div class="mb-3">
+                            <label asp-for="Consultant.Nom" class="form-label fw-bold"></label>
+                            <input asp-for="Consultant.Nom" class="form-control" />
+                            <span asp-validation-for="Consultant.Nom" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Consultant.Prenom" class="form-label fw-bold"></label>
+                            <input asp-for="Consultant.Prenom" class="form-control" />
+                            <span asp-validation-for="Consultant.Prenom" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Consultant.Titre" class="form-label fw-bold"></label>
+                            <input asp-for="Consultant.Titre" class="form-control" placeholder="ex: Développeur Fullstack" />
+                            <span asp-validation-for="Consultant.Titre" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Consultant.ExperienceTotale" class="form-label fw-bold">Expérience (ans)</label>
+                            <input asp-for="Consultant.ExperienceTotale" class="form-control" type="number" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Statut Actuel</label>
+                            <input value="@Model.Consultant.Statut" class="form-control" disabled />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <input type="submit" value="Enregistrer les modifications" class="btn btn-primary btn-lg w-100" />
+                    <a asp-page="./Index" class="btn btn-link w-100 mt-2">Retour à la liste</a>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Consultant.Prenom" class="control-label"></label>
-                <input asp-for="Consultant.Prenom" class="form-control" />
-                <span asp-validation-for="Consultant.Prenom" class="text-danger"></span>
+
+            <div class="col-md-8">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">Parcours Professionnel</h4>
+                    <button type="button" id="add-mission" class="btn btn-success btn-sm">
+                        <i class="bi bi-plus-circle me-1"></i> Ajouter une mission
+                    </button>
+                </div>
+
+                <div id="missions-container">
+                    @if (Model.Consultant.Missions != null && Model.Consultant.Missions.Any())
+                    {
+                        @for (int i = 0; i < Model.Consultant.Missions.Count; i++)
+                        {
+                            <div class="card mb-3 mission-item shadow-sm">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0 text-secondary">Mission existante</h6>
+                                    <span class="badge bg-info">ID: @Model.Consultant.Missions[i].Id</span>
+                                </div>
+                                <div class="card-body">
+                                    <input type="hidden" asp-for="Consultant.Missions[i].Id" />
+                                    <input type="hidden" asp-for="Consultant.Missions[i].ConsultantId" />
+                                    
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold">Nom du projet</label>
+                                            <input asp-for="Consultant.Missions[i].TitreProjet" class="form-control" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold">Client</label>
+                                            <select asp-for="Consultant.Missions[i].ClientId" asp-items="Model.ClientOptions" class="form-select">
+                                                <option value="">-- Sélectionner --</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold">Date Début</label>
+                                            <input asp-for="Consultant.Missions[i].DateDebut" class="form-control" type="date" />
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold">Date Fin</label>
+                                            <input asp-for="Consultant.Missions[i].DateFin" class="form-control" type="date" />
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold">Rôle</label>
+                                            <input asp-for="Consultant.Missions[i].RoleOccupe" class="form-control" />
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold">Description</label>
+                                            <textarea asp-for="Consultant.Missions[i].Description" class="form-control" rows="2"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Consultant.Titre" class="control-label"></label>
-                <input asp-for="Consultant.Titre" class="form-control" />
-                <span asp-validation-for="Consultant.Titre" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Consultant.ExperienceTotale" class="control-label"></label>
-                <input asp-for="Consultant.ExperienceTotale" class="form-control" />
-                <span asp-validation-for="Consultant.ExperienceTotale" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Consultant.Statut" class="control-label"></label>
-                <input asp-for="Consultant.Statut" class="form-control" />
-                <span asp-validation-for="Consultant.Statut" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
 
-<div>
-    <a asp-page="./Index">Back to List</a>
-</div>
+@section Scripts {
+    @{await Html.RenderPartialAsync(partialViewName: "_ValidationScriptsPartial");}
+    
+    <script>
+        const btnAdd = document.getElementById('add-mission');
+        const container = document.getElementById('missions-container');
+        
+        // On initialise l'index sur le nombre d'éléments déjà présents
+        let missionIndex = @(Model.Consultant.Missions?.Count ?? 0);
 
+        if (btnAdd) {
+            btnAdd.addEventListener('click', function() {
+                const template = `
+                    <div class="card mb-3 mission-item border-primary shadow-sm">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="bi bi-briefcase me-2"></i>Nouvelle Mission</h6>
+                            <button type="button" class="btn-close btn-close-white" onclick="this.closest('.mission-item').remove()"></button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Nom du projet</label>
+                                    <input type="text" name="Consultant.Missions[${missionIndex}].TitreProjet" class="form-control" placeholder="ex: Refonte CRM" required />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Client</label>
+                                    <select name="Consultant.Missions[${missionIndex}].ClientId" class="form-select" required>
+                                        <option value="">-- Sélectionner un client --</option>
+                                        @foreach(var item in Model.ClientOptions) {
+                                            <option value="@item.Value">@item.Text</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">Date Début</label>
+                                    <input type="date" name="Consultant.Missions[${missionIndex}].DateDebut" class="form-control" required />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">Date Fin (Optionnel)</label>
+                                    <input type="date" name="Consultant.Missions[${missionIndex}].DateFin" class="form-control" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">Rôle occupé</label>
+                                    <input type="text" name="Consultant.Missions[${missionIndex}].RoleOccupe" class="form-control" />
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">Description des réalisations</label>
+                                    <textarea name="Consultant.Missions[${missionIndex}].Description" class="form-control" rows="3"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+
+                container.insertAdjacentHTML('beforeend', template);
+                missionIndex++;
+            });
+        }
+    </script>
+}

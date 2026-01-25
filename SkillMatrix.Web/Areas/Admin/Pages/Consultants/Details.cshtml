@@ -2,48 +2,162 @@
 @model SkillMatrix.Web.Areas_Admin_Pages_Consultants.DetailsModel
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Profil de " + Model.Consultant.Prenom;
 }
 
-<h1>Details</h1>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a asp-page="./Index" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-chevron-left"></i> Retour à la liste
+        </a>
+        <div class="d-flex gap-2">
+            <a asp-page="./Edit" asp-route-id="@Model.Consultant.Id" class="btn btn-primary shadow-sm">
+                <i class="bi bi-pencil-square me-1"></i> Modifier
+            </a>
+            <button onclick="window.print()" class="btn btn-light border shadow-sm">
+                <i class="bi bi-printer"></i>
+            </button>
+        </div>
+    </div>
 
-<div>
-    <h4>Consultant</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Consultant.Nom)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Consultant.Nom)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Consultant.Prenom)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Consultant.Prenom)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Consultant.Titre)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Consultant.Titre)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Consultant.ExperienceTotale)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Consultant.ExperienceTotale)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Consultant.Statut)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Consultant.Statut)
-        </dd>
-    </dl>
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body text-center p-4">
+                    <div class="avatar-xl shadow-sm mx-auto mb-3">
+                        @Model.Consultant.Prenom.Substring(0, 1)@Model.Consultant.Nom.Substring(0, 1)
+                    </div>
+                    
+                    <h3 class="fw-bold mb-0">@Model.Consultant.Prenom @Model.Consultant.Nom</h3>
+                    <p class="text-primary fw-medium">@Model.Consultant.Titre</p>
+                    
+                    @{
+                        var badgeClass = Model.Consultant.Statut switch {
+                            "En Mission" => "bg-success",
+                            "Intercontrat" => "bg-warning text-dark",
+                            _ => "bg-info text-white"
+                        };
+                    }
+                    <span class="badge rounded-pill @badgeClass px-3 py-2 mb-3">
+                        @Model.Consultant.Statut
+                    </span>
+
+                    <div class="row text-start mt-3">
+                        <div class="col-12 mb-2">
+                            <small class="text-muted d-block text-uppercase small fw-bold">Expérience</small>
+                            <span>@Model.Consultant.ExperienceTotale ans</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-star-fill text-warning me-2"></i>Compétences</h5>
+                    
+                    @if (Model.Consultant.ConsultantSkills != null && Model.Consultant.ConsultantSkills.Any())
+                    {
+                        foreach (var skill in Model.Consultant.ConsultantSkills)
+                        {
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="fw-semibold">@skill.Skill.Nom</span>
+                                    <span class="text-muted small">@skill.Niveau%</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar" role="progressbar" style="width: @skill.Niveau%"></div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted small italic">Aucune compétence renseignée.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-4"><i class="bi bi-briefcase-fill text-primary me-2"></i>Parcours Professionnel</h4>
+
+                    @if (Model.Consultant.Missions != null && Model.Consultant.Missions.Any())
+                    {
+                        <div class="timeline">
+                            @foreach (var mission in Model.Consultant.Missions.OrderByDescending(m => m.DateDebut))
+                            {
+                                <div class="timeline-item">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content mb-4 pb-2 border-bottom">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <h5 class="fw-bold text-dark mb-1">@mission.TitreProjet</h5>
+                                            <span class="badge bg-light text-muted border">
+                                                @mission.DateDebut.ToString("MM/yyyy") - 
+                                                @(mission.DateFin.HasValue ? mission.DateFin.Value.ToString("MM/yyyy") : "Aujourd'hui")
+                                            </span>
+                                        </div>
+                                        <div class="mb-2 text-primary fw-medium">
+                                            <i class="bi bi-building me-1"></i> @(mission.Client?.Nom ?? "Client Inconnu")
+                                            <span class="text-muted mx-2">|</span>
+                                            <span class="text-secondary small">@mission.RoleOccupe</span>
+                                        </div>
+                                        <p class="text-muted" style="font-size: 0.95rem;">@mission.Description</p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-folder2-open fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">Aucune mission enregistrée pour ce consultant.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<div>
-    <a asp-page="./Edit" asp-route-id="@Model.Consultant.Id">Edit</a> |
-    <a asp-page="./Index">Back to List</a>
-</div>
+
+<style>
+    /* Design de l'Avatar */
+    .avatar-xl {
+        width: 80px;
+        height: 80px;
+        background: #e9ecef;
+        color: #0d6efd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+        border-radius: 50%;
+    }
+
+    /* Design de la Timeline */
+    .timeline { position: relative; padding-left: 20px; }
+    .timeline-item { position: relative; }
+    .timeline-marker {
+        position: absolute;
+        left: -26px;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #0d6efd;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 2px #0d6efd;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: -20px;
+        top: 10px;
+        bottom: 0;
+        width: 2px;
+        background: #dee2e6;
+    }
+</style>

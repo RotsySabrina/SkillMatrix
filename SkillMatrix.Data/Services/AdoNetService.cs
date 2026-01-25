@@ -19,26 +19,25 @@ public class AdoNetService
         var consultants = new List<ConsultantListingDto>();
         int totalCount = 0;
 
-        // Calculer le nombre de lignes à sauter
         int skip = (page - 1) * pageSize;
 
-        // 🛑 1. REQUÊTE POUR OBTENIR LE COMPTE TOTAL (pour l'affichage "Page 1 de X")
         string countSql = "SELECT COUNT(Id) FROM Consultants";
 
-        // 🛑 Requête SQL brute (sans filtre de pagination pour l'instant)
         string sql = $@"
-            SELECT Id, Nom, Prenom, Titre, Statut 
-            FROM Consultants
+            SELECT c.Id, c.Nom, c.Prenom, c.Titre, c.Statut,
+                (SELECT STRING_AGG(s.Nom, ',') 
+                    FROM ConsultantSkills cs 
+                    JOIN Skills s ON cs.SkillId = s.Id 
+                    WHERE cs.ConsultantId = c.Id) as Skills
+            FROM Consultants c
             ORDER BY Nom
             OFFSET {skip} ROWS
             FETCH NEXT {pageSize} ROWS ONLY";
 
-            // 3. Utilisation de l'objet de connexion ADO.NET
             using (var connection = new SqlConnection(_connectionString))
             {
             await connection.OpenAsync();
 
-            // --- EXÉCUTION DU COUNT ---
             using (var countCommand = new SqlCommand(countSql, connection))
             {
                 // ExecuteScalar renvoie la première colonne de la première ligne
@@ -47,7 +46,7 @@ public class AdoNetService
 
             using (var command = new SqlCommand(sql, connection))
             {
-                // 4. Utilisation du Data Reader pour lire ligne par ligne
+                //Utilisation du Data Reader pour lire ligne par ligne
                 using (var reader = await command.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
@@ -57,8 +56,9 @@ public class AdoNetService
                             Id = reader.GetInt32(0),
                             NomComplet = reader.GetString(2) + " " + reader.GetString(1), // Prenom + Nom
                             Titre = reader.GetString(3),
-                            //DescriptionCourte = reader.GetString(4).Substring(0, 50) + "...", // Tronqué
-                            Statut = reader.GetString(4) // 🛑 Récupération de la logique métier
+                            //DescriptionCourte = reader.GetString(4).Substring(0, 50) + "...",
+                            Statut = reader.GetString(4),
+                            Competences = reader.IsDBNull(5) ? new List<string>() : reader.GetString(5).Split(',').ToList()
                         });
                     }
                 }
@@ -66,24 +66,24 @@ public class AdoNetService
         }
         return (consultants, totalCount);
     }
-
     public async Task<Consultant?> GetConsultantDetailsAsync(int id)
     {
         Consultant? consultant = null;
 
-        // Requête pour récupérer le consultant ET ses skills via des JOIN
-        string sql = @"
-            SELECT c.Id, c.Nom, c.Prenom, c.Titre, c.ExperienceTotale, c.Statut,
-                s.Nom as SkillNom, cs.Niveau
-            FROM Consultants c
-            LEFT JOIN ConsultantSkills cs ON c.Id = cs.ConsultantId
-            LEFT JOIN Skills s ON cs.SkillId = s.Id
-            WHERE c.Id = @id";
-
         using (var connection = new SqlConnection(_connectionString))
         {
             await connection.OpenAsync();
-            using (var command = new SqlCommand(sql, connection))
+
+            // --- 1. INFOS DE BASE + SKILLS ---
+            string sqlInfo = @"
+                SELECT c.Id, c.Nom, c.Prenom, c.Titre, c.ExperienceTotale, c.Statut,
+                    s.Nom as SkillNom, cs.Niveau
+                FROM Consultants c
+                LEFT JOIN ConsultantSkills cs ON c.Id = cs.ConsultantId
+                LEFT JOIN Skills s ON cs.SkillId = s.Id
+                WHERE c.Id = @id";
+
+            using (var command = new SqlCommand(sqlInfo, connection))
             {
                 command.Parameters.AddWithValue("@id", id);
                 using (var reader = await command.ExecuteReaderAsync())
@@ -92,27 +92,52 @@ public class AdoNetService
                     {
                         if (consultant == null)
                         {
-                            consultant = new Consultant
-                            {
+                            consultant = new Consultant {
                                 Id = reader.GetInt32(0),
                                 Nom = reader.GetString(1),
                                 Prenom = reader.GetString(2),
                                 Titre = reader.GetString(3),
                                 ExperienceTotale = reader.GetInt32(4),
                                 Statut = reader.GetString(5),
-                                ConsultantSkills = new List<ConsultantSkill>()
+                                ConsultantSkills = new List<ConsultantSkill>(),
+                                Missions = new List<Mission>()
                             };
                         }
-
-                        // Si une compétence existe (LEFT JOIN peut retourner null)
-                        if (!reader.IsDBNull(6)) 
-                        {
-                            consultant.ConsultantSkills.Add(new ConsultantSkill
-                            {
+                        if (!reader.IsDBNull(7)) {
+                            consultant.ConsultantSkills.Add(new ConsultantSkill {
                                 Skill = new Skill { Nom = reader.GetString(6) },
                                 Niveau = reader.GetInt32(7)
                             });
                         }
+                    }
+                }
+            }
+
+            if (consultant == null) return null;
+
+            // --- 2. MISSIONS + CLIENTS ---
+            string sqlMissions = @"
+                SELECT m.TitreProjet, m.RoleOccupe, m.DateDebut, m.DateFin, m.Description, cl.Nom as ClientNom
+                FROM Missions m
+                JOIN Clients cl ON m.ClientId = cl.Id
+                WHERE m.ConsultantId = @id
+                ORDER BY m.DateDebut DESC";
+
+            using (var command = new SqlCommand(sqlMissions, connection))
+            {
+                command.Parameters.AddWithValue("@id", id);
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        consultant.Missions.Add(new Mission {
+                            TitreProjet = reader.GetString(0),
+                            RoleOccupe = reader.IsDBNull(1) ? "" : reader.GetString(1),
+                            DateDebut = reader.GetDateTime(2),
+                            DateFin = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
+                            Description = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                            Client = new Client { Nom = reader.GetString(5) } // On peuple l'objet Client
+                        });
                     }
                 }
             }
@@ -168,5 +193,49 @@ public class AdoNetService
             }
         }
         return stats;
+    }
+
+    public async Task UpdateExpiredStatusesAsync()
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            string lazyUpdateSql = @"
+                UPDATE Consultants 
+                SET Statut = 'Intercontrat' 
+                WHERE Statut = 'En Mission' 
+                AND Id NOT IN (
+                    SELECT ConsultantId FROM Missions 
+                    WHERE DateDebut <= GETDATE() 
+                    AND (DateFin IS NULL OR DateFin >= CAST(GETDATE() AS DATE))
+                )";
+            
+            using (var updateCmd = new SqlCommand(lazyUpdateSql, connection))
+            {
+                await updateCmd.ExecuteNonQueryAsync();
+            }
+        }
+    }
+
+    public async Task<Dictionary<int, string>> GetRealtimeStatusesAsync(List<int> ids)
+    {
+        var statuses = new Dictionary<int, string>();
+        if (!ids.Any()) return statuses;
+
+        string sql = $"SELECT Id, Statut FROM Consultants WHERE Id IN ({string.Join(",", ids)})";
+
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            using (var cmd = new SqlCommand(sql, connection))
+            using (var reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    statuses.Add(reader.GetInt32(0), reader.GetString(1));
+                }
+            }
+        }
+        return statuses;
     }
 }

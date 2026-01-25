@@ -7,16 +7,19 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using SkillMatrix.Core.Models;
 using SkillMatrix.Data.EF;
+using SkillMatrix.Data.Services;
 
 namespace SkillMatrix.Web.Areas_Admin_Pages_Consultants
 {
     public class DeleteModel : PageModel
     {
         private readonly SkillMatrix.Data.EF.ApplicationDbContext _context;
+        private readonly ElasticSearchService _elasticService;
 
-        public DeleteModel(SkillMatrix.Data.EF.ApplicationDbContext context)
+        public DeleteModel(SkillMatrix.Data.EF.ApplicationDbContext context, ElasticSearchService elasticService)
         {
             _context = context;
+            _elasticService = elasticService;
         }
 
         [BindProperty]
@@ -54,6 +57,15 @@ namespace SkillMatrix.Web.Areas_Admin_Pages_Consultants
                 Consultant = consultant;
                 _context.Consultants.Remove(Consultant);
                 await _context.SaveChangesAsync();
+                try 
+                {
+                    await _elasticService.DeleteConsultantAsync(id.Value);
+                }
+                catch (Exception ex)
+                {
+                    // Optionnel : logger l'erreur si Elastic est indisponible
+                    // mais ne pas bloquer la redirection car SQL est déjà supprimé
+                }
             }
 
             return RedirectToPage("./Index");

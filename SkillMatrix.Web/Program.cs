@@ -109,13 +109,38 @@ app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
-    var elasticService = scope.ServiceProvider.GetService<ElasticSearchService>();
+    var services = scope.ServiceProvider;
+    var elasticService = services.GetService<ElasticSearchService>();
+    var context = services.GetRequiredService<ApplicationDbContext>();
+
     if (elasticService != null)
     {
-        Console.WriteLine("Tentative de création de l'index Elasticsearch...");
-        // Appel synchrone au démarrage (pour ne pas bloquer le thread principal trop longtemps)
-        elasticService.CreateIndexAsync().Wait(); 
-        Console.WriteLine("Indexation initiale terminée.");
+        Console.WriteLine("Démarrage de la synchronisation initiale Elasticsearch...");
+
+        // 1. Récupérer TOUS les consultants avec leurs compétences (Indispensable !)
+        var consultants = await context.Consultants
+            .AsNoTracking()
+            .Include(c => c.ConsultantSkills)
+                .ThenInclude(cs => cs.Skill)
+            .ToListAsync();
+
+        // 2. Transformer en DTOs
+        var dtos = consultants.Select(c => new SkillMatrix.Core.DTOs.SearchConsultantDto
+        {
+            Id = c.Id,
+            NomComplet = $"{c.Prenom} {c.Nom}",
+            Titre = c.Titre,
+            Statut = c.Statut,
+            Competences = c.ConsultantSkills
+                .Where(cs => cs.Skill != null)
+                .Select(cs => cs.Skill.Nom)
+                .ToList()
+        }).ToList();
+
+        // 3. Envoyer à Elasticsearch (Utilisez votre méthode ReindexAllAsync qui fait le Delete/Create/Bulk)
+        await elasticService.ReindexAllAsync(dtos);
+
+        Console.WriteLine($"Indexation initiale terminée : {dtos.Count} consultants synchronisés.");
     }
 }
 

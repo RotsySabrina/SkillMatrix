@@ -47,16 +47,14 @@ namespace SkillMatrix.Web.Areas_Admin_Pages_Consultants
         [BindProperty]
         public Consultant Consultant { get; set; } = default!;
 
-        // For more information, see https://aka.ms/RazorPagesCRUD.
         public async Task<IActionResult> OnPostAsync(string[] selectedSkills,Dictionary<string, string> SkillLevels)
         {
             if (!ModelState.IsValid)
             {
-                PopulateAssignedSkillData(); // Recharger les compétences en cas d'erreur
+                PopulateAssignedSkillData(); 
                 return Page();
             }
 
-            // 1. OnPostAsync reçoit le tableau d'IDs des compétences sélectionnées
             if (selectedSkills != null)
             {
                 Consultant.ConsultantSkills = new List<ConsultantSkill>();
@@ -66,7 +64,6 @@ namespace SkillMatrix.Web.Areas_Admin_Pages_Consultants
                     if (int.TryParse(skillIdString, out int skillId))
                     {
                         int niveau = 1; 
-                        // 🛑 Récupération de la vraie valeur du Niveau
                         if (SkillLevels.TryGetValue(skillIdString, out string niveauString) && int.TryParse(niveauString, out int parsedNiveau))
                         {
                             niveau = parsedNiveau;
@@ -75,7 +72,7 @@ namespace SkillMatrix.Web.Areas_Admin_Pages_Consultants
                         // 3. Créer l'objet de jointure
                         Consultant.ConsultantSkills.Add(new ConsultantSkill
                         {
-                            ConsultantId = Consultant.Id, // Sera assigné par EF Core
+                            ConsultantId = Consultant.Id,
                             SkillId = skillId,
                             Niveau = niveau,
                             DerniereUtilisation = DateTime.Now
@@ -84,10 +81,11 @@ namespace SkillMatrix.Web.Areas_Admin_Pages_Consultants
                 }
             }
 
+            Consultant.Statut = "Disponible";
+
             _context.Consultants.Add(Consultant);
             await _context.SaveChangesAsync();
 
-            // 🛑 NOUVEAU CODE : Préparer et envoyer les données à Elastic
 
             var newConsultant = await _context.Consultants
                 .Include(c => c.ConsultantSkills)

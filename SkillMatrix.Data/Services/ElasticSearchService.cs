@@ -66,5 +66,59 @@ namespace SkillMatrix.Data.Services
             return searchResponse.Documents.ToList();
         }
         
+        public async Task DeleteConsultantAsync(int id)
+        {
+            var response = await _client.DeleteAsync<SearchConsultantDto>(id);
+            if (!response.IsValid && response.ServerError != null)
+            {
+                throw new Exception($"Suppression Elastic échouée : {response.ServerError.Error.Reason}");
+            }
+        }
+
+        // À ajouter dans SkillMatrix.Data.Services.ElasticSearchService
+        public async Task SyncAllConsultantsAsync(IEnumerable<SearchConsultantDto> consultants)
+        {
+            if (consultants == null || !consultants.Any()) return;
+
+            var bulkDescriptor = new BulkDescriptor();
+
+            foreach (var consultant in consultants)
+            {
+                bulkDescriptor.Index<SearchConsultantDto>(op => op
+                    .Id(consultant.Id) // Force l'ID pour éviter les doublons
+                    .Document(consultant)
+                );
+            }
+
+            var response = await _client.BulkAsync(bulkDescriptor);
+
+            if (!response.IsValid)
+            {
+                // On logge l'erreur mais on ne bloque pas l'utilisateur
+                Console.WriteLine($"Erreur Bulk Indexing: {response.OriginalException?.Message}");
+            }
+        }
+
+        public async Task ReindexAllAsync(List<SearchConsultantDto> allConsultants)
+        {
+            await _client.Indices.DeleteAsync(IndexName);
+            
+            var createResponse = await _client.Indices.CreateAsync(IndexName, c => c
+                .Map<SearchConsultantDto>(m => m.AutoMap())
+            );
+
+            if (allConsultants != null && allConsultants.Any())
+            {
+                var bulkResponse = await _client.IndexManyAsync(allConsultants, IndexName);
+                
+                await _client.Indices.RefreshAsync(IndexName);
+
+                if (!bulkResponse.IsValid)
+                {
+                    throw new Exception($"Erreur lors de la réindexation massive : {bulkResponse.DebugInformation}");
+                }
+            }
+        }
+
     }
 }

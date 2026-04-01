@@ -238,4 +238,62 @@ public class AdoNetService
         }
         return statuses;
     }
+
+    public async Task<TimelineViewModel> GetTimelineDataAsync(int monthsToDisplay = 6)
+    {
+        var viewModel = new TimelineViewModel {
+            StartDate = DateTime.Today,
+            TotalDays = monthsToDisplay * 30
+        };
+
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+
+            string sql = @"
+                SELECT c.Nom, c.Prenom, m.TitreProjet, m.DateDebut, m.DateFin, cl.Nom as ClientNom
+                FROM Consultants c
+                LEFT JOIN Missions m ON c.Id = m.ConsultantId
+                LEFT JOIN Clients cl ON m.ClientId = cl.Id
+                ORDER BY c.Nom, m.DateDebut";
+
+            using (var cmd = new SqlCommand(sql, connection))
+            using (var reader = await cmd.ExecuteReaderAsync())
+            {
+                string currentConsultant = "";
+                ConsultantTimelineDto currentDto = null;
+
+                while (await reader.ReadAsync())
+                {
+                    string fullName = $"{reader.GetString(1)} {reader.GetString(0)}";
+
+                    if (currentConsultant != fullName)
+                    {
+                        currentDto = new ConsultantTimelineDto { NomComplet = fullName };
+                        viewModel.Consultants.Add(currentDto);
+                        currentConsultant = fullName;
+                    }
+
+                    if (!reader.IsDBNull(3)) 
+                    {
+                        DateTime start = reader.GetDateTime(3);
+                        DateTime end = reader.IsDBNull(4) ? viewModel.StartDate.AddDays(viewModel.TotalDays) : reader.GetDateTime(4);
+
+                        int startCol = (int)(start - viewModel.StartDate).TotalDays;
+                        int span = (int)(end - start).TotalDays;
+
+                        if (startCol + span > 0) 
+                        {
+                            currentDto.MissionBars.Add(new MissionBarDto {
+                                Label = $"{reader.GetString(5)} - {reader.GetString(2)}",
+                                StartColumn = Math.Max(startCol, 0) + 1, 
+                                ColumnSpan = span
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        return viewModel;
+    }
 }

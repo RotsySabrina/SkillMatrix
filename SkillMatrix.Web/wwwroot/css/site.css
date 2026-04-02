@@ -135,6 +135,51 @@ body {
     box-sizing: border-box;
     justify-content: space-between;
     gap: 10px;
+    border-left: 4px solid transparent;
+}
+
+.timeline-consultant-name.status-en-mission {
+    border-left-color: #0d6efd;
+    background: linear-gradient(to right, rgba(13, 110, 253, 0.06), transparent 55%);
+}
+
+.timeline-consultant-name.status-disponible {
+    border-left-color: #198754;
+    background: linear-gradient(to right, rgba(25, 135, 84, 0.06), transparent 55%);
+}
+
+.timeline-consultant-name.status-intercontrat {
+    border-left-color: #fd7e14;
+    background: linear-gradient(to right, rgba(253, 126, 20, 0.07), transparent 55%);
+}
+
+.timeline-consultant-name.status-default {
+    border-left-color: #6c757d;
+    background: linear-gradient(to right, rgba(108, 117, 125, 0.05), transparent 55%);
+}
+
+.timeline-mission-count-badge.status-en-mission {
+    background: #e7f1ff;
+    color: #0d6efd;
+    border-color: #b6d4fe;
+}
+
+.timeline-mission-count-badge.status-disponible {
+    background: #eaf7ef;
+    color: #198754;
+    border-color: #badbcc;
+}
+
+.timeline-mission-count-badge.status-intercontrat {
+    background: #fff1e8;
+    color: #fd7e14;
+    border-color: #ffddb8;
+}
+
+.timeline-mission-count-badge.status-default {
+    background: #f1f3f5;
+    color: #6c757d;
+    border-color: #dee2e6;
 }
 
 .timeline-consultant-label {

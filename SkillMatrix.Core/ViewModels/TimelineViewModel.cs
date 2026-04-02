@@ -2,7 +2,7 @@ namespace SkillMatrix.Core.ViewModels
 {
     public class TimelineViewModel
     {
-        public DateTime StartDate {get; set;}
+        public DateTime StartDate {get; set;} 
         public int TotalDays{ get; set;}
         public List<TimelineMonthDto> Months {get; set;} = new();
         public List<ConsultantTimelineDto> Consultants {get; set;} = new();
@@ -15,7 +15,8 @@ namespace SkillMatrix.Core.ViewModels
     }
 
     public class ConsultantTimelineDto {
-        public string NomComplet { get; set; }
+        public string NomComplet { get; set; }= "";
+        public string Statut {get; set; }= "";
         public List<MissionBarDto> MissionBars { get; set; } = new();
     }
 

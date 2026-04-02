@@ -52,14 +52,22 @@
                 var consultant = Model.TimelineData.Consultants[rowIndex];
                 var missionCount = consultant.MissionBars?.Count ?? 0;
 
-                <div class="timeline-consultant-name"
+                var statusClass = consultant.Statut switch
+                {
+                    "En Mission" => "status-en-mission",
+                    "Disponible" => "status-disponible",
+                    "Intercontrat" => "status-intercontrat",
+                    _ => "status-default"
+                };
+
+                <div class="timeline-consultant-name @statusClass"
                     data-sidebar-row="@rowIndex"
                     data-consultant-name="@consultant.NomComplet.ToLowerInvariant()"
-                    title="@consultant.NomComplet - @missionCount mission(s)">
+                    title="@consultant.NomComplet - @consultant.Statut - @missionCount mission(s)">
                     
                     <span class="timeline-consultant-label">@consultant.NomComplet</span>
 
-                    <span class="timeline-mission-count-badge">
+                    <span class="timeline-mission-count-badge @statusClass">
                         @missionCount
                     </span>
                 </div>

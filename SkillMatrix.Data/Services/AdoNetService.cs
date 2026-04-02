@@ -255,7 +255,7 @@ public class AdoNetService
             await connection.OpenAsync();
 
             string sql = @"
-                SELECT c.Nom, c.Prenom, m.TitreProjet, m.DateDebut, m.DateFin, cl.Nom as ClientNom
+                SELECT c.Nom, c.Prenom, c.Statut, m.TitreProjet, m.DateDebut, m.DateFin, cl.Nom as ClientNom
                 FROM Consultants c
                 LEFT JOIN Missions m ON c.Id = m.ConsultantId
                 LEFT JOIN Clients cl ON m.ClientId = cl.Id
@@ -270,23 +270,25 @@ public class AdoNetService
                 while (await reader.ReadAsync())
                 {
                     string fullName = $"{reader.GetString(1)} {reader.GetString(0)}";
+                    string statut = reader.IsDBNull(2) ? "" : reader.GetString(2);
 
                     if (currentConsultant != fullName)
                     {
                         currentDto = new ConsultantTimelineDto
                         {
-                            NomComplet = fullName
+                            NomComplet = fullName,
+                            Statut = statut
                         };
                         viewModel.Consultants.Add(currentDto);
                         currentConsultant = fullName;
                     }
 
-                    if (!reader.IsDBNull(3) && currentDto != null)
+                    if (!reader.IsDBNull(4) && currentDto != null)
                     {
-                        DateTime missionStart = reader.GetDateTime(3).Date;
-                        DateTime missionEnd = reader.IsDBNull(4)
+                        DateTime missionStart = reader.GetDateTime(4).Date;
+                        DateTime missionEnd = reader.IsDBNull(5)
                             ? endDateExclusive.AddDays(-1)
-                            : reader.GetDateTime(4).Date;
+                            : reader.GetDateTime(5).Date;
 
                         var visibleStart = missionStart < startDate ? startDate : missionStart;
                         var visibleEnd = missionEnd >= endDateExclusive ? endDateExclusive.AddDays(-1) : missionEnd;
@@ -296,8 +298,8 @@ public class AdoNetService
                             int startColumn = (visibleStart - startDate).Days + 1;
                             int columnSpan = (visibleEnd - visibleStart).Days + 1;
 
-                            string clientName = reader.IsDBNull(5) ? "Client inconnu" : reader.GetString(5);
-                            string missionTitle = reader.IsDBNull(2) ? "Mission" : reader.GetString(2);
+                            string clientName = reader.IsDBNull(6) ? "Client inconnu" : reader.GetString(6);
+                            string missionTitle = reader.IsDBNull(3) ? "Mission" : reader.GetString(3);
 
                             currentDto.MissionBars.Add(new MissionBarDto
                             {

@@ -131,20 +131,23 @@ body {
 
 .timeline-grid {
     display: grid;
-    grid-template-columns: repeat(var(--total-days), 40px);
+    grid-template-columns: repeat(var(--total-days), 32px);
+    position: relative;
 }
 
 .timeline-row {
     display: contents;
 }
 
-.consultant-name, .timeline-row-wrapper {
+.timeline-consultant-name {
     height: 50px;
+    padding: 12px 15px;
     border-bottom: 1px solid #eee;
-}
-
-.timeline-row-wrapper {
-    display: contents;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
 }
 
 .mission-bar {
@@ -162,17 +165,32 @@ body {
 }
 
 .today-line {
+    position: absolute;
     top: 0;
     bottom: 0;
     width: 2px;
     background-color: #dc3545;
-    z-index: 5;
+    z-index: 20;
     pointer-events: none;
 }
 
 .month-header-row, 
 .days-header-row {
     display: contents;
+}
+
+.day-number {
+    font-weight: 600;
+    color: #495057;
+}
+
+.day-week {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+}
+
+.week-start {
+    border-left: 2px solid #adb5bd;
 }
 
 .month-label {
@@ -188,9 +206,13 @@ body {
 }
 
 .day-label {
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     color: #6c757d;
     border-right: 1px solid #f1f1f1;
-    padding-left: 2px;
-    height: 20px;
+    height: 38px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.1;
 }

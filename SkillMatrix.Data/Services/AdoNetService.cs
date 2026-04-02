@@ -241,9 +241,14 @@ public class AdoNetService
 
     public async Task<TimelineViewModel> GetTimelineDataAsync(int monthsToDisplay = 6)
     {
-        var viewModel = new TimelineViewModel {
-            StartDate = DateTime.Today,
-            TotalDays = monthsToDisplay * 30
+        var startDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        var endDate = startDate.AddMonths(monthsToDisplay);
+        var totalDays = (endDate - startDate).Days;
+
+        var viewModel = new TimelineViewModel
+        {
+            StartDate = startDate,
+            TotalDays = totalDays
         };
 
         using (var connection = new SqlConnection(_connectionString))
@@ -274,26 +279,33 @@ public class AdoNetService
                         currentConsultant = fullName;
                     }
 
-                    if (!reader.IsDBNull(3)) 
+                    if (!reader.IsDBNull(3))
                     {
-                        DateTime start = reader.GetDateTime(3);
-                        DateTime end = reader.IsDBNull(4) ? viewModel.StartDate.AddDays(viewModel.TotalDays) : reader.GetDateTime(4);
+                        DateTime missionStart = reader.GetDateTime(3).Date;
+                        DateTime missionEnd = reader.IsDBNull(4)
+                            ? endDate.AddDays(-1)
+                            : reader.GetDateTime(4).Date;
 
-                        int startCol = (int)(start - viewModel.StartDate).TotalDays;
-                        int span = (int)(end - start).TotalDays;
+                        var visibleStart = missionStart < startDate ? startDate : missionStart;
+                        var visibleEnd = missionEnd >= endDate ? endDate.AddDays(-1) : missionEnd;
 
-                        if (startCol + span > 0) 
+                        if (visibleEnd >= visibleStart)
                         {
-                            currentDto.MissionBars.Add(new MissionBarDto {
+                            int startCol = (visibleStart - startDate).Days + 1;
+                            int span = (visibleEnd - visibleStart).Days + 1;
+
+                            currentDto.MissionBars.Add(new MissionBarDto
+                            {
                                 Label = $"{reader.GetString(5)} - {reader.GetString(2)}",
-                                StartColumn = Math.Max(startCol, 0) + 1, 
-                                ColumnSpan = span
+                                StartColumn = startCol,
+                                ColumnSpan = Math.Max(span, 1)
                             });
                         }
                     }
                 }
             }
         }
+
         return viewModel;
     }
 }

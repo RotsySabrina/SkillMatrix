@@ -104,4 +104,10 @@ public class HomeController : Controller
         return View(consultant);
     }
 
+    public async Task<IActionResult> Timeline()
+    {
+        var model = await _adoNetService.GetTimelineDataAsync(6);
+        return View(model);
+    }
+
 }

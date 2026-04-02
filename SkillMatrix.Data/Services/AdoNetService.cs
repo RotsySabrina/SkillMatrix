@@ -238,4 +238,81 @@ public class AdoNetService
         }
         return statuses;
     }
+
+    public async Task<TimelineViewModel> GetTimelineDataAsync(int monthsToDisplay = 6)
+    {
+        var startDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        var endDateExclusive = startDate.AddMonths(monthsToDisplay);
+
+        var viewModel = new TimelineViewModel
+        {
+            StartDate = startDate,
+            TotalDays = (endDateExclusive - startDate).Days
+        };
+
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+
+            string sql = @"
+                SELECT c.Nom, c.Prenom, c.Statut, m.TitreProjet, m.DateDebut, m.DateFin, cl.Nom as ClientNom
+                FROM Consultants c
+                LEFT JOIN Missions m ON c.Id = m.ConsultantId
+                LEFT JOIN Clients cl ON m.ClientId = cl.Id
+                ORDER BY c.Nom, c.Prenom, m.DateDebut";
+
+            using (var cmd = new SqlCommand(sql, connection))
+            using (var reader = await cmd.ExecuteReaderAsync())
+            {
+                string currentConsultant = "";
+                ConsultantTimelineDto? currentDto = null;
+
+                while (await reader.ReadAsync())
+                {
+                    string fullName = $"{reader.GetString(1)} {reader.GetString(0)}";
+                    string statut = reader.IsDBNull(2) ? "" : reader.GetString(2);
+
+                    if (currentConsultant != fullName)
+                    {
+                        currentDto = new ConsultantTimelineDto
+                        {
+                            NomComplet = fullName,
+                            Statut = statut
+                        };
+                        viewModel.Consultants.Add(currentDto);
+                        currentConsultant = fullName;
+                    }
+
+                    if (!reader.IsDBNull(4) && currentDto != null)
+                    {
+                        DateTime missionStart = reader.GetDateTime(4).Date;
+                        DateTime missionEnd = reader.IsDBNull(5)
+                            ? endDateExclusive.AddDays(-1)
+                            : reader.GetDateTime(5).Date;
+
+                        var visibleStart = missionStart < startDate ? startDate : missionStart;
+                        var visibleEnd = missionEnd >= endDateExclusive ? endDateExclusive.AddDays(-1) : missionEnd;
+
+                        if (visibleEnd >= visibleStart)
+                        {
+                            int startColumn = (visibleStart - startDate).Days + 1;
+                            int columnSpan = (visibleEnd - visibleStart).Days + 1;
+
+                            string clientName = reader.IsDBNull(6) ? "Client inconnu" : reader.GetString(6);
+                            string missionTitle = reader.IsDBNull(3) ? "Mission" : reader.GetString(3);
+
+                            currentDto.MissionBars.Add(new MissionBarDto
+                            {
+                                Label = $"{clientName} - {missionTitle}",
+                                StartColumn = startColumn,
+                                ColumnSpan = Math.Max(columnSpan, 1)
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        return viewModel;
+    }
 }

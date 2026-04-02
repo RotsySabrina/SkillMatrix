@@ -1,0 +1,237 @@
+@page
+@model SkillMatrix.Web.Areas_Admin_Pages_Dashboard.TimelineModel
+@{
+    ViewData["Title"] = "Timeline des Missions";
+
+    var todayOffset = (DateTime.Today - Model.TimelineData.StartDate).Days;
+}
+
+<div class="container-fluid py-4">
+    <div class="timeline-toolbar d-flex flex-wrap gap-2 align-items-center">
+        <button type="button"
+                class="btn btn-outline-primary btn-sm"
+                onclick="scrollToToday()">
+            Aller à aujourd’hui
+        </button>
+
+        <div class="input-group input-group-sm timeline-filter-box">
+            <span class="input-group-text">Consultant</span>
+            <input type="text"
+                id="consultantFilter"
+                class="form-control"
+                placeholder="Filtrer par nom..."
+                oninput="applyConsultantFilter()" />
+            <button type="button"
+                    class="btn btn-outline-secondary"
+                    onclick="clearConsultantFilter()">
+                Réinitialiser
+            </button>
+        </div>
+
+        <span id="timelineFilterInfo" class="small text-muted"></span>
+
+        <div class="timeline-legend d-flex gap-3 align-items-center">
+            <span class="legend-item">
+                <span class="legend-color legend-mission"></span> Mission
+            </span>
+            <span class="legend-item">
+                <span class="legend-color legend-today"></span> Aujourd’hui
+            </span>
+            <span class="legend-item">
+                <span class="legend-color legend-weekend"></span> Weekend
+            </span>
+        </div>
+    </div>
+
+    <div class="timeline-main-container">
+        <div class="timeline-sidebar">
+            <div class="sidebar-header">Consultants</div>
+
+            @for (int rowIndex = 0; rowIndex < Model.TimelineData.Consultants.Count; rowIndex++)
+            {
+                var consultant = Model.TimelineData.Consultants[rowIndex];
+                var missionCount = consultant.MissionBars?.Count ?? 0;
+
+                var statusClass = consultant.Statut switch
+                {
+                    "En Mission" => "status-en-mission",
+                    "Disponible" => "status-disponible",
+                    "Intercontrat" => "status-intercontrat",
+                    _ => "status-default"
+                };
+
+                <div class="timeline-consultant-name @statusClass"
+                    data-sidebar-row="@rowIndex"
+                    data-consultant-name="@consultant.NomComplet.ToLowerInvariant()"
+                    title="@consultant.NomComplet - @consultant.Statut - @missionCount mission(s)">
+                    
+                    <span class="timeline-consultant-label">@consultant.NomComplet</span>
+
+                    <span class="timeline-mission-count-badge @statusClass">
+                        @missionCount
+                    </span>
+                </div>
+            }
+        </div>
+
+        <div class="timeline-scroll-area" id="timelineScrollArea">
+            <div class="timeline-grid-wrapper">
+                <div class="timeline-grid" style="--total-days:@Model.TimelineData.TotalDays; --consultant-count:@Model.TimelineData.Consultants.Count;">
+                    
+                    @for (int m = 0, startCol = 1; m < Model.TimelineData.Months.Count; m++)
+                    {
+                        var month = Model.TimelineData.Months[m];
+                        <div class="month-label"
+                             style="grid-column: @startCol / span @month.DaysInMonth; grid-row: 1;">
+                            @month.Name
+                        </div>
+                        startCol += month.DaysInMonth;
+                    }
+
+                    @for (int i = 0; i < Model.TimelineData.TotalDays; i++)
+                    {
+                        var date = Model.TimelineData.StartDate.AddDays(i);
+                        var isWeekend = date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday;
+                        var isMonday = date.DayOfWeek == DayOfWeek.Monday;
+
+                        <div class="day-label @(isWeekend ? "weekend-cell" : "") @(isMonday ? "week-start" : "")"
+                             style="grid-column: @(i + 1); grid-row: 2;"
+                             title="@date.ToString("dd/MM/yyyy")">
+                            <span class="day-number">@date.Day</span>
+                            <span class="day-week">@date.ToString("ddd").ToUpper()</span>
+                        </div>
+                    }
+
+                    @if (todayOffset >= 0 && todayOffset < Model.TimelineData.TotalDays)
+                    {
+                        <div class="today-line"
+                             style="grid-column: @(todayOffset + 1); grid-row: 1 / span @(Model.TimelineData.Consultants.Count + 2);">
+                        </div>
+                    }
+
+                    @for (int rowIndex = 0; rowIndex < Model.TimelineData.Consultants.Count; rowIndex++)
+                    {
+                        var consultant = Model.TimelineData.Consultants[rowIndex];
+                        var gridRow = rowIndex + 3;
+
+                        for (int i = 0; i < Model.TimelineData.TotalDays; i++)
+                        {
+                            var date = Model.TimelineData.StartDate.AddDays(i);
+                            var isWeekend = date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday;
+                            var isMonday = date.DayOfWeek == DayOfWeek.Monday;
+
+                            <div class="timeline-cell @(isWeekend ? "weekend-cell" : "") @(isMonday ? "week-start" : "")"
+                                data-consultant-row="@rowIndex"
+                                style="grid-column: @(i + 1); grid-row: @gridRow;">
+                            </div>
+                        }
+
+                        foreach (var mission in consultant.MissionBars)
+                        {
+                            <div class="mission-bar"
+                                data-consultant-row="@rowIndex"
+                                title="@mission.Label"
+                                style="grid-column: @mission.StartColumn / span @mission.ColumnSpan; grid-row: @gridRow;">
+                                <span class="mission-text">@mission.Label</span>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function scrollToToday() {
+            const container = document.getElementById('timelineScrollArea');
+            const todayLine = document.querySelector('.today-line');
+
+            if (container && todayLine) {
+                const left = todayLine.offsetLeft - (container.clientWidth / 2);
+                container.scrollLeft = Math.max(left, 0);
+            }
+        }
+
+        function applyConsultantFilter() {
+            const input = document.getElementById('consultantFilter');
+            const info = document.getElementById('timelineFilterInfo');
+            const grid = document.querySelector('.timeline-grid');
+            const todayLine = document.querySelector('.today-line');
+
+            if (!input || !grid) return;
+
+            const query = (input.value || '').trim().toLowerCase();
+
+            const sidebarRows = Array.from(
+                document.querySelectorAll('.timeline-consultant-name[data-sidebar-row]')
+            );
+
+            let visibleCount = 0;
+            let nextGridRow = 3;
+
+            sidebarRows.forEach(sidebarRow => {
+                const rowIndex = sidebarRow.dataset.sidebarRow;
+                const consultantName = sidebarRow.dataset.consultantName || '';
+                const matches = query === '' || consultantName.includes(query);
+
+                const gridItems = document.querySelectorAll(`[data-consultant-row="${rowIndex}"]`);
+
+                if (matches) {
+                    sidebarRow.style.display = 'flex';
+
+                    gridItems.forEach(item => {
+                        item.style.display = '';
+                        item.style.gridRow = nextGridRow;
+                    });
+
+                    visibleCount++;
+                    nextGridRow++;
+                } else {
+                    sidebarRow.style.display = 'none';
+
+                    gridItems.forEach(item => {
+                        item.style.display = 'none';
+                    });
+                }
+            });
+
+            if (visibleCount > 0) {
+                grid.style.gridTemplateRows = `38px 36px repeat(${visibleCount}, 60px)`;
+
+                if (todayLine) {
+                    todayLine.style.display = '';
+                    todayLine.style.gridRow = `1 / span ${visibleCount + 2}`;
+                }
+            } else {
+                grid.style.gridTemplateRows = '38px 36px';
+
+                if (todayLine) {
+                    todayLine.style.display = 'none';
+                }
+            }
+
+            if (info) {
+                if (query === '') {
+                    info.textContent = `${visibleCount} consultant(s) affiché(s)`;
+                } else {
+                    info.textContent = `${visibleCount} résultat(s) pour "${input.value.trim()}"`;
+                }
+            }
+        }
+
+        function clearConsultantFilter() {
+            const input = document.getElementById('consultantFilter');
+            if (!input) return;
+
+            input.value = '';
+            applyConsultantFilter();
+        }
+
+        window.addEventListener('load', function () {
+            applyConsultantFilter();
+            scrollToToday();
+        });
+    </script>
+}

@@ -1,72 +1,121 @@
 @page
 @model SkillMatrix.Web.Areas_Admin_Pages_Dashboard.TimelineModel
-
 @{
-    ViewData["Title"] = "Planning des Ressources";
+    ViewData["Title"] = "Timeline des Missions";
+
+    var todayOffset = (DateTime.Today - Model.TimelineData.StartDate).Days;
 }
 
 <div class="container-fluid py-4">
-    <h2 class="mb-4 fw-bold text-primary">Timeline des Missions</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="fw-bold text-primary mb-1">Timeline des Missions</h1>
+            <p class="text-muted mb-0">
+                Visualisation des missions par consultant sur les @Model.TimelineData.Months.Count prochains mois.
+            </p>
+        </div>
+
+        <div class="timeline-legend d-flex gap-3 align-items-center">
+            <span class="legend-item">
+                <span class="legend-color legend-mission"></span> Mission
+            </span>
+            <span class="legend-item">
+                <span class="legend-color legend-today"></span> Aujourd’hui
+            </span>
+            <span class="legend-item">
+                <span class="legend-color legend-weekend"></span> Weekend
+            </span>
+        </div>
+    </div>
 
     <div class="timeline-main-container">
         <div class="timeline-sidebar">
-            <div class="sidebar-header" style="height: 70px;">Consultants</div> @* Ajusté pour correspondre aux en-têtes mois+jours *@
+            <div class="sidebar-header">Consultants</div>
+
             @foreach (var consultant in Model.TimelineData.Consultants)
             {
-                <div class="timeline-consultant-name">
-                    <strong>@consultant.NomComplet</strong>
+                <div class="timeline-consultant-name" title="@consultant.NomComplet">
+                    @consultant.NomComplet
                 </div>
             }
         </div>
 
-        <div class="timeline-scroll-area">
-            <div class="timeline-grid" style="--total-days: @Model.TimelineData.TotalDays;">
-                
-                @foreach (var month in Model.TimelineData.Months)
-                {
-                    <div class="month-label" style="grid-column: span @month.DaysInMonth;">
-                        @month.Name
-                    </div>
-                }
-
-                @for (int i = 0; i < Model.TimelineData.TotalDays; i++)
-                {
-                    var date = Model.TimelineData.StartDate.AddDays(i);
-                    var isMonday = date.DayOfWeek == DayOfWeek.Monday;
-
-                    <div class="day-label @(isMonday ? "week-start" : "")"
-                        style="grid-column: @(i + 1); grid-row: 2;"
-                        title="@date.ToString("dd/MM/yyyy")">
-                        <span class="day-number">@date.Day</span>
-                        <span class="day-week">@date.ToString("ddd")</span>
-                    </div>
-                }
-
-                @{ int rowIndex = 3; } 
-                @foreach (var consultant in Model.TimelineData.Consultants)
-                {
-                    @foreach (var mission in consultant.MissionBars)
+        <div class="timeline-scroll-area" id="timelineScrollArea">
+            <div class="timeline-grid-wrapper">
+                <div class="timeline-grid" style="--total-days:@Model.TimelineData.TotalDays; --consultant-count:@Model.TimelineData.Consultants.Count;">
+                    
+                    @for (int m = 0, startCol = 1; m < Model.TimelineData.Months.Count; m++)
                     {
-                        <div class="mission-bar" 
-                            style="grid-column: @mission.StartColumn / span @mission.ColumnSpan; grid-row: @rowIndex;"
-                            title="@mission.Label">
-                            <small>@mission.Label</small>
+                        var month = Model.TimelineData.Months[m];
+                        <div class="month-label"
+                             style="grid-column: @startCol / span @month.DaysInMonth; grid-row: 1;">
+                            @month.Name
+                        </div>
+                        startCol += month.DaysInMonth;
+                    }
+
+                    @for (int i = 0; i < Model.TimelineData.TotalDays; i++)
+                    {
+                        var date = Model.TimelineData.StartDate.AddDays(i);
+                        var isWeekend = date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday;
+                        var isMonday = date.DayOfWeek == DayOfWeek.Monday;
+
+                        <div class="day-label @(isWeekend ? "weekend-cell" : "") @(isMonday ? "week-start" : "")"
+                             style="grid-column: @(i + 1); grid-row: 2;"
+                             title="@date.ToString("dd/MM/yyyy")">
+                            <span class="day-number">@date.Day</span>
+                            <span class="day-week">@date.ToString("ddd").ToUpper()</span>
                         </div>
                     }
-                    
-                    <div class="timeline-row-bg" style="grid-column: 1 / span @Model.TimelineData.TotalDays; grid-row: @rowIndex; border-bottom: 1px solid #eee; height: 50px; pointer-events: none;"></div>
-                    
-                    rowIndex++;
-                }
 
-                @{
-                    var todayOffset = (DateTime.Today - Model.TimelineData.StartDate).Days;
-                }
-                @if (todayOffset >= 0 && todayOffset < Model.TimelineData.TotalDays)
-                {
-                    <div class="today-line" style="left: @(todayOffset * 32)px;"></div>
-                }
+                    @if (todayOffset >= 0 && todayOffset < Model.TimelineData.TotalDays)
+                    {
+                        <div class="today-line"
+                             style="grid-column: @(todayOffset + 1); grid-row: 1 / span @(Model.TimelineData.Consultants.Count + 2);">
+                        </div>
+                    }
+
+                    @for (int rowIndex = 0; rowIndex < Model.TimelineData.Consultants.Count; rowIndex++)
+                    {
+                        var consultant = Model.TimelineData.Consultants[rowIndex];
+                        var gridRow = rowIndex + 3;
+
+                        for (int i = 0; i < Model.TimelineData.TotalDays; i++)
+                        {
+                            var date = Model.TimelineData.StartDate.AddDays(i);
+                            var isWeekend = date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday;
+                            var isMonday = date.DayOfWeek == DayOfWeek.Monday;
+
+                            <div class="timeline-cell @(isWeekend ? "weekend-cell" : "") @(isMonday ? "week-start" : "")"
+                                 style="grid-column: @(i + 1); grid-row: @gridRow;">
+                            </div>
+                        }
+
+                        foreach (var mission in consultant.MissionBars)
+                        {
+                            <div class="mission-bar"
+                                 title="@mission.Label"
+                                 style="grid-column: @mission.StartColumn / span @mission.ColumnSpan; grid-row: @gridRow;">
+                                <span class="mission-text">@mission.Label</span>
+                            </div>
+                        }
+                    }
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        window.addEventListener('load', function () {
+            const container = document.getElementById('timelineScrollArea');
+            const todayLine = document.querySelector('.today-line');
+
+            if (container && todayLine) {
+                const left = todayLine.offsetLeft - (container.clientWidth / 2);
+                container.scrollLeft = Math.max(left, 0);
+            }
+        });
+    </script>
+}

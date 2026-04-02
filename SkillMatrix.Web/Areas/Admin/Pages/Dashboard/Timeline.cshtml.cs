@@ -18,17 +18,24 @@ namespace SkillMatrix.Web.Areas_Admin_Pages_Dashboard
 
         public async Task OnGetAsync()
         {
-            TimelineData = await _adoNetService.GetTimelineDataAsync(6);
+            const int monthsToDisplay = 6;
+
+            TimelineData = await _adoNetService.GetTimelineDataAsync(monthsToDisplay);
+
+            TimelineData.Months.Clear();
+
             DateTime current = TimelineData.StartDate;
-            for (int i = 0; i < 6; i++)
+
+            for (int i = 0; i < monthsToDisplay; i++)
             {
-                TimelineData.Months.Add(new TimelineMonthDto {
+                TimelineData.Months.Add(new TimelineMonthDto
+                {
                     Name = current.ToString("MMMM yyyy"),
                     DaysInMonth = DateTime.DaysInMonth(current.Year, current.Month)
                 });
+
                 current = current.AddMonths(1);
             }
-            
         }
     }
 }

@@ -242,13 +242,12 @@ public class AdoNetService
     public async Task<TimelineViewModel> GetTimelineDataAsync(int monthsToDisplay = 6)
     {
         var startDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-        var endDate = startDate.AddMonths(monthsToDisplay);
-        var totalDays = (endDate - startDate).Days;
+        var endDateExclusive = startDate.AddMonths(monthsToDisplay);
 
         var viewModel = new TimelineViewModel
         {
             StartDate = startDate,
-            TotalDays = totalDays
+            TotalDays = (endDateExclusive - startDate).Days
         };
 
         using (var connection = new SqlConnection(_connectionString))
@@ -260,13 +259,13 @@ public class AdoNetService
                 FROM Consultants c
                 LEFT JOIN Missions m ON c.Id = m.ConsultantId
                 LEFT JOIN Clients cl ON m.ClientId = cl.Id
-                ORDER BY c.Nom, m.DateDebut";
+                ORDER BY c.Nom, c.Prenom, m.DateDebut";
 
             using (var cmd = new SqlCommand(sql, connection))
             using (var reader = await cmd.ExecuteReaderAsync())
             {
                 string currentConsultant = "";
-                ConsultantTimelineDto currentDto = null;
+                ConsultantTimelineDto? currentDto = null;
 
                 while (await reader.ReadAsync())
                 {
@@ -274,31 +273,37 @@ public class AdoNetService
 
                     if (currentConsultant != fullName)
                     {
-                        currentDto = new ConsultantTimelineDto { NomComplet = fullName };
+                        currentDto = new ConsultantTimelineDto
+                        {
+                            NomComplet = fullName
+                        };
                         viewModel.Consultants.Add(currentDto);
                         currentConsultant = fullName;
                     }
 
-                    if (!reader.IsDBNull(3))
+                    if (!reader.IsDBNull(3) && currentDto != null)
                     {
                         DateTime missionStart = reader.GetDateTime(3).Date;
                         DateTime missionEnd = reader.IsDBNull(4)
-                            ? endDate.AddDays(-1)
+                            ? endDateExclusive.AddDays(-1)
                             : reader.GetDateTime(4).Date;
 
                         var visibleStart = missionStart < startDate ? startDate : missionStart;
-                        var visibleEnd = missionEnd >= endDate ? endDate.AddDays(-1) : missionEnd;
+                        var visibleEnd = missionEnd >= endDateExclusive ? endDateExclusive.AddDays(-1) : missionEnd;
 
                         if (visibleEnd >= visibleStart)
                         {
-                            int startCol = (visibleStart - startDate).Days + 1;
-                            int span = (visibleEnd - visibleStart).Days + 1;
+                            int startColumn = (visibleStart - startDate).Days + 1;
+                            int columnSpan = (visibleEnd - visibleStart).Days + 1;
+
+                            string clientName = reader.IsDBNull(5) ? "Client inconnu" : reader.GetString(5);
+                            string missionTitle = reader.IsDBNull(2) ? "Mission" : reader.GetString(2);
 
                             currentDto.MissionBars.Add(new MissionBarDto
                             {
-                                Label = $"{reader.GetString(5)} - {reader.GetString(2)}",
-                                StartColumn = startCol,
-                                ColumnSpan = Math.Max(span, 1)
+                                Label = $"{clientName} - {missionTitle}",
+                                StartColumn = startColumn,
+                                ColumnSpan = Math.Max(columnSpan, 1)
                             });
                         }
                     }

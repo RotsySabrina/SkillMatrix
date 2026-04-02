@@ -7,13 +7,28 @@
 }
 
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h1 class="fw-bold text-primary mb-1">Timeline des Missions</h1>
-            <p class="text-muted mb-0">
-                Visualisation des missions par consultant sur les @Model.TimelineData.Months.Count prochains mois.
-            </p>
+    <div class="timeline-toolbar d-flex flex-wrap gap-2 align-items-center">
+        <button type="button"
+                class="btn btn-outline-primary btn-sm"
+                onclick="scrollToToday()">
+            Aller à aujourd’hui
+        </button>
+
+        <div class="input-group input-group-sm timeline-filter-box">
+            <span class="input-group-text">Consultant</span>
+            <input type="text"
+                id="consultantFilter"
+                class="form-control"
+                placeholder="Filtrer par nom..."
+                oninput="applyConsultantFilter()" />
+            <button type="button"
+                    class="btn btn-outline-secondary"
+                    onclick="clearConsultantFilter()">
+                Réinitialiser
+            </button>
         </div>
+
+        <span id="timelineFilterInfo" class="small text-muted"></span>
 
         <div class="timeline-legend d-flex gap-3 align-items-center">
             <span class="legend-item">
@@ -32,9 +47,14 @@
         <div class="timeline-sidebar">
             <div class="sidebar-header">Consultants</div>
 
-            @foreach (var consultant in Model.TimelineData.Consultants)
+            @for (int rowIndex = 0; rowIndex < Model.TimelineData.Consultants.Count; rowIndex++)
             {
-                <div class="timeline-consultant-name" title="@consultant.NomComplet">
+                var consultant = Model.TimelineData.Consultants[rowIndex];
+
+                <div class="timeline-consultant-name"
+                    data-sidebar-row="@rowIndex"
+                    data-consultant-name="@consultant.NomComplet.ToLowerInvariant()"
+                    title="@consultant.NomComplet">
                     @consultant.NomComplet
                 </div>
             }
@@ -87,15 +107,17 @@
                             var isMonday = date.DayOfWeek == DayOfWeek.Monday;
 
                             <div class="timeline-cell @(isWeekend ? "weekend-cell" : "") @(isMonday ? "week-start" : "")"
-                                 style="grid-column: @(i + 1); grid-row: @gridRow;">
+                                data-consultant-row="@rowIndex"
+                                style="grid-column: @(i + 1); grid-row: @gridRow;">
                             </div>
                         }
 
                         foreach (var mission in consultant.MissionBars)
                         {
                             <div class="mission-bar"
-                                 title="@mission.Label"
-                                 style="grid-column: @mission.StartColumn / span @mission.ColumnSpan; grid-row: @gridRow;">
+                                data-consultant-row="@rowIndex"
+                                title="@mission.Label"
+                                style="grid-column: @mission.StartColumn / span @mission.ColumnSpan; grid-row: @gridRow;">
                                 <span class="mission-text">@mission.Label</span>
                             </div>
                         }
@@ -108,7 +130,7 @@
 
 @section Scripts {
     <script>
-        window.addEventListener('load', function () {
+        function scrollToToday() {
             const container = document.getElementById('timelineScrollArea');
             const todayLine = document.querySelector('.today-line');
 
@@ -116,6 +138,86 @@
                 const left = todayLine.offsetLeft - (container.clientWidth / 2);
                 container.scrollLeft = Math.max(left, 0);
             }
+        }
+
+        function applyConsultantFilter() {
+            const input = document.getElementById('consultantFilter');
+            const info = document.getElementById('timelineFilterInfo');
+            const grid = document.querySelector('.timeline-grid');
+            const todayLine = document.querySelector('.today-line');
+
+            if (!input || !grid) return;
+
+            const query = (input.value || '').trim().toLowerCase();
+
+            const sidebarRows = Array.from(
+                document.querySelectorAll('.timeline-consultant-name[data-sidebar-row]')
+            );
+
+            let visibleCount = 0;
+            let nextGridRow = 3;
+
+            sidebarRows.forEach(sidebarRow => {
+                const rowIndex = sidebarRow.dataset.sidebarRow;
+                const consultantName = sidebarRow.dataset.consultantName || '';
+                const matches = query === '' || consultantName.includes(query);
+
+                const gridItems = document.querySelectorAll(`[data-consultant-row="${rowIndex}"]`);
+
+                if (matches) {
+                    sidebarRow.style.display = 'flex';
+
+                    gridItems.forEach(item => {
+                        item.style.display = '';
+                        item.style.gridRow = nextGridRow;
+                    });
+
+                    visibleCount++;
+                    nextGridRow++;
+                } else {
+                    sidebarRow.style.display = 'none';
+
+                    gridItems.forEach(item => {
+                        item.style.display = 'none';
+                    });
+                }
+            });
+
+            if (visibleCount > 0) {
+                grid.style.gridTemplateRows = `38px 36px repeat(${visibleCount}, 60px)`;
+
+                if (todayLine) {
+                    todayLine.style.display = '';
+                    todayLine.style.gridRow = `1 / span ${visibleCount + 2}`;
+                }
+            } else {
+                grid.style.gridTemplateRows = '38px 36px';
+
+                if (todayLine) {
+                    todayLine.style.display = 'none';
+                }
+            }
+
+            if (info) {
+                if (query === '') {
+                    info.textContent = `${visibleCount} consultant(s) affiché(s)`;
+                } else {
+                    info.textContent = `${visibleCount} résultat(s) pour "${input.value.trim()}"`;
+                }
+            }
+        }
+
+        function clearConsultantFilter() {
+            const input = document.getElementById('consultantFilter');
+            if (!input) return;
+
+            input.value = '';
+            applyConsultantFilter();
+        }
+
+        window.addEventListener('load', function () {
+            applyConsultantFilter();
+            scrollToToday();
         });
     </script>
 }

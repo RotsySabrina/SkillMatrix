@@ -158,6 +158,17 @@ body {
     position: relative;
 }
 
+.timeline-filter-box {
+    min-width: 320px;
+}
+
+.timeline-toolbar .btn {
+    white-space: nowrap;
+}
+
+#timelineFilterInfo {
+    min-width: 180px;
+}
 .month-label {
     background: #eef4fb;
     border-right: 1px solid #d5dfeb;

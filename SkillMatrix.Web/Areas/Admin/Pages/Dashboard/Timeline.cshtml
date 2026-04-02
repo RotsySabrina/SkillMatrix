@@ -1,0 +1,60 @@
+@page
+@model SkillMatrix.Web.Areas_Admin_Pages_Dashboard.TimelineModel
+
+@{
+    ViewData["Title"] = "Planning des Ressources";
+}
+
+<div class="container-fluid py-4">
+    <h2 class="mb-4 fw-bold text-primary">Timeline des Missions</h2>
+
+    <div class="timeline-main-container">
+        <div class="timeline-sidebar">
+            <div class="sidebar-header" style="height: 70px;">Consultants</div> @* Ajusté pour correspondre aux en-têtes mois+jours *@
+            @foreach (var consultant in Model.TimelineData.Consultants)
+            {
+                <div class="consultant-name">
+                    <strong>@consultant.NomComplet</strong>
+                </div>
+            }
+        </div>
+
+        <div class="timeline-scroll-area">
+            <div class="timeline-grid" style="--total-days: @Model.TimelineData.TotalDays;">
+                
+                @foreach (var month in Model.TimelineData.Months)
+                {
+                    <div class="month-label" style="grid-column: span @month.DaysInMonth;">
+                        @month.Name
+                    </div>
+                }
+
+                @for (int i = 1; i <= Model.TimelineData.TotalDays; i++)
+                {
+                    <div class="day-label" style="grid-column: @i; grid-row: 2;">
+                        @(i % 5 == 0 || i == 1 ? i.ToString() : "") @* Affiche 1, 5, 10... pour ne pas surcharger *@
+                    </div>
+                }
+
+                @{ int rowIndex = 3; } 
+                @foreach (var consultant in Model.TimelineData.Consultants)
+                {
+                    @foreach (var mission in consultant.MissionBars)
+                    {
+                        <div class="mission-bar" 
+                            style="grid-column: @mission.StartColumn / span @mission.ColumnSpan; grid-row: @rowIndex;"
+                            title="@mission.Label">
+                            <small>@mission.Label</small>
+                        </div>
+                    }
+                    
+                    <div class="timeline-row-bg" style="grid-column: 1 / span @Model.TimelineData.TotalDays; grid-row: @rowIndex; border-bottom: 1px solid #eee; height: 50px; pointer-events: none;"></div>
+                    
+                    rowIndex++;
+                }
+
+                <div class="today-line" style="grid-column: 1; grid-row: 1 / @rowIndex;"></div>
+            </div>
+        </div>
+    </div>
+</div>

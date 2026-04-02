@@ -1,6 +1,3 @@
-/* 📁 wwwroot/css/site.css */
-
-/* Fond général léger pour faire ressortir les cartes */
 body {
     background-color: #f8f9fa;
     color: #2c3e50;
@@ -11,7 +8,7 @@ body {
     border: none;
     border-radius: 12px;
     background: white;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05); /* Ombre douce */
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05); 
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     overflow: hidden; /* Pour que l'image ou le header ne dépasse pas */
 }
@@ -92,4 +89,108 @@ body {
 }
 .dropdown-item i {
     opacity: 0.7; /* Icônes un peu plus discrètes */
+}
+
+
+.timeline-main-container {
+    display: flex;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.timeline-sidebar {
+    width: 200px;
+    flex-shrink: 0;
+    background: #f8f9fa;
+    border-right: 2px solid #dee2e6;
+}
+
+.sidebar-header {
+    height: 50px;
+    padding: 15px;
+    font-weight: bold;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.consultant-name {
+    height: 50px;
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.timeline-scroll-area {
+    overflow-x: auto;
+    flex-grow: 1;
+}
+
+.timeline-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--total-days), 40px);
+}
+
+.timeline-row {
+    display: contents;
+}
+
+.consultant-name, .timeline-row-wrapper {
+    height: 50px;
+    border-bottom: 1px solid #eee;
+}
+
+.timeline-row-wrapper {
+    display: contents;
+}
+
+.mission-bar {
+    height: 30px;
+    margin: 10px 2px;
+    background: linear-gradient(90deg, #0d6efd, #0b5ed7);
+    color: white;
+    border-radius: 4px;
+    z-index: 2;
+}
+
+.mission-bar:hover {
+    transform: scale(1.02);
+    z-index: 10;
+}
+
+.today-line {
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #dc3545;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.month-header-row, 
+.days-header-row {
+    display: contents;
+}
+
+.month-label {
+    background: #e9ecef;
+    border-right: 1px solid #dee2e6;
+    border-bottom: 2px solid #adb5bd;
+    padding: 8px;
+    font-weight: bold;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.day-label {
+    font-size: 0.7rem;
+    color: #6c757d;
+    border-right: 1px solid #f1f1f1;
+    padding-left: 2px;
+    height: 20px;
 }

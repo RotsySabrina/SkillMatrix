@@ -50,12 +50,18 @@
             @for (int rowIndex = 0; rowIndex < Model.TimelineData.Consultants.Count; rowIndex++)
             {
                 var consultant = Model.TimelineData.Consultants[rowIndex];
+                var missionCount = consultant.MissionBars?.Count ?? 0;
 
                 <div class="timeline-consultant-name"
                     data-sidebar-row="@rowIndex"
                     data-consultant-name="@consultant.NomComplet.ToLowerInvariant()"
-                    title="@consultant.NomComplet">
-                    @consultant.NomComplet
+                    title="@consultant.NomComplet - @missionCount mission(s)">
+                    
+                    <span class="timeline-consultant-label">@consultant.NomComplet</span>
+
+                    <span class="timeline-mission-count-badge">
+                        @missionCount
+                    </span>
                 </div>
             }
         </div>

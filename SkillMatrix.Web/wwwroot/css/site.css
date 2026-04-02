@@ -133,10 +133,34 @@ body {
     font-weight: 600;
     color: #1f3b57;
     box-sizing: border-box;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.timeline-consultant-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .timeline-consultant-name:hover {
     background: #eef4fb;
+}
+
+.timeline-mission-count-badge {
+    flex-shrink: 0;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #e9f2ff;
+    color: #0d5bd7;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #cfe0ff;
 }
 
 .timeline-scroll-area {

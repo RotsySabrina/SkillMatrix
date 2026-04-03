@@ -8,8 +8,10 @@ namespace SkillMatrix.Core.ViewModels{
         public int DisponibleCount { get; set; }
         public int IntercontratCount { get; set; }
         public int MissionsActivesAujourdHui {get; set;}
-        public List<SkillStat> TopSkills { get; set; } = new();
-        
+        public int ConsultantsSansCompetence {get; set;}
+        public double TauxDisponibilite {get; set;}
+        public double TauxOccupation {get; set;}
+        public List<SkillStat> TopSkills { get; set; } = new();        
         public List<Consultant> RecentConsultants { get; set; } = new();
     }
 

@@ -34,6 +34,24 @@ namespace SkillMatrix.Web.Areas_Admin_Pages_Dashboard
                 (m.DateFin == null || m.DateFin >= today)
             );
 
+            Dashboard.ConsultantsSansCompetence = await _context.Consultants
+                .Include(c => c.ConsultantSkills)
+                .CountAsync(c => c.ConsultantSkills == null || !c.ConsultantSkills.Any());
+
+            if (Dashboard.TotalConsultants > 0)
+            {
+                Dashboard.TauxDisponibilite = Math.Round(
+                    (double)Dashboard.DisponibleCount * 100 / Dashboard.TotalConsultants, 1);
+
+                Dashboard.TauxOccupation = Math.Round(
+                    (double)Dashboard.EnMissionCount * 100 / Dashboard.TotalConsultants, 1);
+            }
+            else
+            {
+                Dashboard.TauxDisponibilite = 0;
+                Dashboard.TauxOccupation = 0;
+            }
+
             Dashboard.TopSkills = await _context.ConsultantSkills
                 .Include(cs => cs.Skill)
                 .GroupBy(cs => cs.Skill!.Nom)

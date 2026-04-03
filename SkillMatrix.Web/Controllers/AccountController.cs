@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -18,16 +19,34 @@ public class AccountController : Controller
     }
 
     [HttpGet]
-    public IActionResult Login() => View();
+    [AllowAnonymous]
+    public IActionResult Login(string? returnUrl = null)
+    {
+        ViewData["ReturnUrl"] = returnUrl;
+        return View();
+    }
 
     [HttpPost]
-    public async Task<IActionResult> Login(string email, string password)
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Login(string email, string password, string? returnUrl = null)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        ViewData["ReturnUrl"] = returnUrl;
+
+        email = (email ?? string.Empty).Trim().ToLowerInvariant();
+        password = (password ?? string.Empty).Trim();
+
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        {
+            ViewBag.Error = "Veuillez renseigner votre email et votre mot de passe.";
+            return View();
+        }
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == email);
 
         if (user != null && _authService.VerifyPassword(user, password))
         {
-            // Création de l'identité de l'utilisateur
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.NomComplet),
@@ -36,18 +55,29 @@ public class AccountController : Controller
                 new Claim("UserId", user.Id.ToString())
             };
 
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var claimsIdentity = new ClaimsIdentity(
+                claims,
+                CookieAuthenticationDefaults.AuthenticationScheme
+            );
 
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, 
-                new ClaimsPrincipal(claimsIdentity));
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity)
+            );
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return LocalRedirect(returnUrl);
+            }
 
             return RedirectToAction("Index", "Home");
         }
 
-        ViewBag.Error = "Email ou mot de passe incorrect";
+        ViewBag.Error = "Email ou mot de passe incorrect.";
         return View();
     }
 
+    [Authorize]
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

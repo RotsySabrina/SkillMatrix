@@ -1,33 +1,64 @@
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-4">
-            <div class="card shadow border-0">
-                <div class="card-body p-5">
-                    <div class="text-center mb-4">
-                        <i class="bi bi-shield-lock text-primary" style="font-size: 3rem;"></i>
-                        <h3 class="fw-bold mt-2">SkillMatrix</h3>
-                        <p class="text-muted">Connexion à votre espace</p>
+@{
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+    ViewData["Title"] = "Connexion";
+    var appName = "TalentTris";
+    var returnUrl = ViewData["ReturnUrl"] as string;
+}
+
+<div class="auth-page">
+    <div class="auth-card auth-card-refined">
+
+        <div class="auth-visual-panel">
+            <div class="auth-visual-overlay"></div>
+        </div>
+
+        <div class="auth-form-panel">
+            <div class="auth-form-shell">
+                <div class="auth-form-header">
+                    <h1 class="auth-title">@appName</h1>
+                    <p class="auth-subtitle">Accédez à votre espace @appName</p>
+                </div>
+
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger auth-alert" role="alert">
+                        @ViewBag.Error
+                    </div>
+                }
+
+                <form asp-action="Login" method="post" class="auth-form">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+
+                    <div class="auth-field">
+                        <label for="email" class="form-label auth-label">Adresse email</label>
+                        <input type="email"
+                               id="email"
+                               name="email"
+                               class="form-control auth-input"
+                               placeholder="admin@talenttris.com"
+                               autocomplete="username"
+                               required />
                     </div>
 
-                    @if (ViewBag.Error != null) {
-                        <div class="alert alert-danger small">@ViewBag.Error</div>
-                    }
+                    <div class="auth-field">
+                        <label for="password" class="form-label auth-label">Mot de passe</label>
+                        <input type="password"
+                               id="password"
+                               name="password"
+                               class="form-control auth-input"
+                               placeholder="Entrez votre mot de passe"
+                               autocomplete="current-password"
+                               required />
+                    </div>
 
-                    <form method="post">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-uppercase">Email</label>
-                            <input type="email" name="email" class="form-control rounded-pill" required />
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label small fw-bold text-uppercase">Mot de passe</label>
-                            <input type="password" name="password" class="form-control rounded-pill" required />
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 shadow-sm">
-                            Se connecter
-                        </button>
-                    </form>
-                </div>
+                    <button type="submit" class="btn auth-submit-btn w-100">
+                        Se connecter
+                    </button>
+                </form>
+
             </div>
         </div>
+
     </div>
 </div>

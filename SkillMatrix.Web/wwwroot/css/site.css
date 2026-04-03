@@ -1231,3 +1231,112 @@
         border-bottom: 1px solid #e7edf4;
     }
 }
+
+/* =========================
+   ADMIN CONSULTANTS INDEX
+   ========================= */
+
+.admin-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.admin-page-actions form {
+    margin: 0;
+}
+
+.admin-flash-alert {
+    border-radius: 16px;
+    border: 1px solid #cfe8d8;
+    background: #edf9f1;
+    color: #1d6b3d;
+    font-weight: 600;
+}
+
+.admin-mini-stat-card {
+    background: #ffffff;
+    border: 1px solid #e6edf5;
+    border-radius: 18px;
+    padding: 18px 20px;
+    box-shadow: 0 8px 18px rgba(26, 57, 87, 0.04);
+}
+
+.admin-mini-stat-label {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    color: #7b8a99;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.admin-mini-stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #18314c;
+}
+
+.admin-consultants-card {
+    border-radius: 22px;
+}
+
+.admin-consultants-table tbody tr:hover {
+    background-color: rgba(53, 104, 154, 0.03);
+    transition: background-color 0.2s ease;
+}
+
+.avatar-circle {
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.95rem;
+    border: 1px solid rgba(0,0,0,0.05);
+    flex-shrink: 0;
+}
+
+.fs-xs {
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.btn-white {
+    background-color: #fff;
+}
+
+.btn-white:hover {
+    background-color: #f8f9fa;
+}
+
+.admin-consultant-name {
+    line-height: 1.2;
+}
+
+.admin-exp-cell {
+    min-width: 180px;
+}
+
+.admin-exp-progress {
+    width: 120px;
+    height: 5px;
+}
+
+.admin-empty-state {
+    padding: 56px 24px;
+}
+
+.admin-empty-icon {
+    font-size: 2.5rem;
+    color: #35689A;
+}
+
+@media (max-width: 768px) {
+    .admin-page-header {
+        align-items: start;
+    }
+}

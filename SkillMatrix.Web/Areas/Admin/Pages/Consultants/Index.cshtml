@@ -3,156 +3,216 @@
 
 @{
     ViewData["Title"] = "Répertoire des Consultants";
+
+    var totalConsultants = Model.Consultant?.Count ?? 0;
+    var totalDisponible = Model.Consultant?.Count(c => c.Statut == "Disponible") ?? 0;
+    var totalMission = Model.Consultant?.Count(c => c.Statut == "En Mission") ?? 0;
+    var totalIntercontrat = Model.Consultant?.Count(c => c.Statut == "Intercontrat") ?? 0;
 }
 
-<div class="container-fluid mt-4 pb-5">
-    <div class="d-flex justify-content-between align-items-end mb-4">
+<div class="container-fluid mt-4 pb-5 admin-consultants-page">
+
+    <div class="admin-page-header mb-4">
         <div>
             <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-1">
-                    <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                <ol class="breadcrumb mb-2">
+                    <li class="breadcrumb-item">
+                        <a asp-area="Admin" asp-page="/Dashboard/Index">Dashboard</a>
+                    </li>
                     <li class="breadcrumb-item active">Consultants</li>
                 </ol>
             </nav>
-            <h2 class="fw-bold mb-0"><i class="bi bi-people-fill text-primary me-2"></i>Effectif Consultants</h2>
+
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-people-fill text-primary me-2"></i>Effectif Consultants
+            </h2>
+            <p class="text-muted mb-0">
+                Gérez les profils consultants, leurs statuts et leurs données métier.
+            </p>
         </div>
-        <div class="d-flex gap-2">
+
+        <div class="admin-page-actions d-flex gap-2 flex-wrap">
             <a asp-page="Import" class="btn btn-outline-secondary shadow-sm">
                 <i class="bi bi-file-earmark-arrow-up me-1"></i> Import CSV
             </a>
+
             <a asp-page="Create" class="btn btn-primary shadow-sm px-4">
                 <i class="bi bi-plus-lg me-1"></i> Nouveau Consultant
             </a>
-            <form method="post" asp-page-handler="SyncAllToElastic" class="mb-3">
-                <button type="submit" class="btn btn-warning">
-                    <i class="bi bi-arrow-repeat"></i> Synchroniser tout vers Elasticsearch
+
+            <form method="post" asp-page-handler="SyncAllToElastic" class="m-0">
+                <button type="submit" class="btn btn-warning shadow-sm">
+                    <i class="bi bi-arrow-repeat me-1"></i> Synchroniser vers Elasticsearch
                 </button>
             </form>
-
-                @if (TempData["SuccessMessage"] != null)
-                {
-                    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
-                }
         </div>
     </div>
 
-    <div class="card shadow-sm border-0 overflow-hidden">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light border-bottom">
-                        <tr>
-                            <th class="ps-4 py-3 text-uppercase fs-xs text-muted fw-bold" style="width: 30%;">Consultant</th>
-                            <th class="py-3 text-uppercase fs-xs text-muted fw-bold">Statut</th>
-                            <th class="py-3 text-uppercase fs-xs text-muted fw-bold">Client Actuel</th>
-                            <th class="py-3 text-uppercase fs-xs text-muted fw-bold">Expérience</th>
-                            <th class="text-end pe-4 py-3 text-uppercase fs-xs text-muted fw-bold">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model.Consultant)
-                        {
-                            <tr>
-                                <td class="ps-4">
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar-circle me-3 bg-primary bg-opacity-10 text-primary fw-bold">
-                                            @(item.Prenom.Substring(0, 1))@(item.Nom.Substring(0, 1))
-                                        </div>
-                                        <div>
-                                            <div class="fw-bold text-dark">@item.Prenom @item.Nom</div>
-                                            <div class="text-muted small">@item.Titre</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    @{
-                                        var badgeClass = item.Statut switch
-                                        {
-                                            "En Mission" => "bg-success",
-                                            "Intercontrat" => "bg-warning text-dark",
-                                            _ => "bg-info text-white"
-                                        };
-                                    }
-                                    <span class="badge rounded-pill @badgeClass px-3 py-2">
-                                        <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> @item.Statut
-                                    </span>
-                                </td>
-                                <td>
-                                    @if (item.Statut == "En Mission")
-                                    {
-                                        // On cherche la mission en cours (DateFin est nulle ou future)
-                                        var missionActuelle = item.Missions?.FirstOrDefault(m => m.DateFin == null || m.DateFin >= DateTime.Today);
-                                        if (missionActuelle?.Client != null)
-                                        {
-                                            <span class="text-dark fw-medium"><i class="bi bi-building me-1"></i> @missionActuelle.Client.Nom</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted small italic">Données client manquantes</span>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted small">-</span>
-                                    }
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <span class="me-2">@item.ExperienceTotale ans</span>
-                                        <div class="progress w-50" style="height: 4px;">
-                                            @{ var progress = Math.Min(item.ExperienceTotale * 5, 100); }
-                                            <div class="progress-bar bg-primary" style="width: @progress%"></div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="text-end pe-4">
-                                    <div class="btn-group shadow-sm">
-                                        <a asp-page="./Details" asp-route-id="@item.Id" class="btn btn-white btn-sm border" title="Voir profil">
-                                            <i class="bi bi-eye text-info"></i>
-                                        </a>
-                                        <a asp-page="./Edit" asp-route-id="@item.Id" class="btn btn-white btn-sm border" title="Modifier">
-                                            <i class="bi bi-pencil-square text-secondary"></i>
-                                        </a>
-                                        <a asp-page="./Delete" asp-route-id="@item.Id" class="btn btn-white btn-sm border" title="Supprimer">
-                                            <i class="bi bi-trash text-danger"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success admin-flash-alert mb-4">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+        </div>
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-xl-3">
+            <div class="admin-mini-stat-card">
+                <div class="admin-mini-stat-label">Total</div>
+                <div class="admin-mini-stat-value">@totalConsultants</div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="admin-mini-stat-card">
+                <div class="admin-mini-stat-label">Disponibles</div>
+                <div class="admin-mini-stat-value text-info">@totalDisponible</div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="admin-mini-stat-card">
+                <div class="admin-mini-stat-label">En mission</div>
+                <div class="admin-mini-stat-value text-success">@totalMission</div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="admin-mini-stat-card">
+                <div class="admin-mini-stat-label">Intercontrat</div>
+                <div class="admin-mini-stat-value text-warning">@totalIntercontrat</div>
             </div>
         </div>
     </div>
+
+    <div class="card shadow-sm border-0 overflow-hidden admin-consultants-card">
+        <div class="card-body p-0">
+            @if (Model.Consultant != null && Model.Consultant.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 admin-consultants-table">
+                        <thead class="bg-light border-bottom">
+                            <tr>
+                                <th class="ps-4 py-3 text-uppercase fs-xs text-muted fw-bold" style="width: 30%;">Consultant</th>
+                                <th class="py-3 text-uppercase fs-xs text-muted fw-bold">Statut</th>
+                                <th class="py-3 text-uppercase fs-xs text-muted fw-bold">Client actuel</th>
+                                <th class="py-3 text-uppercase fs-xs text-muted fw-bold">Expérience</th>
+                                <th class="text-end pe-4 py-3 text-uppercase fs-xs text-muted fw-bold">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Consultant)
+                            {
+                                var firstInitial = !string.IsNullOrWhiteSpace(item.Prenom) ? item.Prenom.Trim()[0].ToString().ToUpper() : "";
+                                var lastInitial = !string.IsNullOrWhiteSpace(item.Nom) ? item.Nom.Trim()[0].ToString().ToUpper() : "";
+                                var initials = string.IsNullOrWhiteSpace(firstInitial + lastInitial) ? "?" : firstInitial + lastInitial;
+
+                                var badgeClass = item.Statut switch
+                                {
+                                    "En Mission" => "bg-success",
+                                    "Intercontrat" => "bg-warning text-dark",
+                                    "Disponible" => "bg-info text-white",
+                                    _ => "bg-secondary"
+                                };
+
+                                var progress = Math.Min(item.ExperienceTotale * 5, 100);
+
+                                var missionActuelle = item.Missions?
+                                    .Where(m => m.DateDebut <= DateTime.Today && (m.DateFin == null || m.DateFin >= DateTime.Today))
+                                    .OrderByDescending(m => m.DateDebut)
+                                    .FirstOrDefault();
+
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle me-3 bg-primary bg-opacity-10 text-primary fw-bold">
+                                                @initials
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark admin-consultant-name">
+                                                    @item.Prenom @item.Nom
+                                                </div>
+                                                <div class="text-muted small">@item.Titre</div>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <span class="badge rounded-pill @badgeClass px-3 py-2">
+                                            <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> @item.Statut
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        @if (missionActuelle?.Client != null)
+                                        {
+                                            <span class="text-dark fw-medium">
+                                                <i class="bi bi-building me-1"></i> @missionActuelle.Client.Nom
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">-</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <div class="d-flex align-items-center admin-exp-cell">
+                                            <span class="me-2">@item.ExperienceTotale an(s)</span>
+                                            <div class="progress admin-exp-progress">
+                                                <div class="progress-bar bg-primary" style="width: @progress%"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group shadow-sm">
+                                            <a asp-page="./Details"
+                                               asp-route-id="@item.Id"
+                                               class="btn btn-white btn-sm border"
+                                               title="Voir profil">
+                                                <i class="bi bi-eye text-info"></i>
+                                            </a>
+                                            <a asp-page="./Edit"
+                                               asp-route-id="@item.Id"
+                                               class="btn btn-white btn-sm border"
+                                               title="Modifier">
+                                                <i class="bi bi-pencil-square text-secondary"></i>
+                                            </a>
+                                            <a asp-page="./Delete"
+                                               asp-route-id="@item.Id"
+                                               class="btn btn-white btn-sm border"
+                                               title="Supprimer">
+                                                <i class="bi bi-trash text-danger"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="admin-empty-state text-center">
+                    <div class="admin-empty-icon mb-3">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <h4 class="fw-bold mb-2">Aucun consultant enregistré</h4>
+                    <p class="text-muted mb-3">
+                        Commencez par créer un consultant ou importer un fichier CSV.
+                    </p>
+                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                        <a asp-page="Create" class="btn btn-primary rounded-pill px-4">
+                            Nouveau Consultant
+                        </a>
+                        <a asp-page="Import" class="btn btn-outline-secondary rounded-pill px-4">
+                            Import CSV
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
 </div>
-
-<style>
-    .avatar-circle {
-        width: 42px;
-        height: 42px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        font-size: 0.9rem;
-        border: 1px solid rgba(0,0,0,0.05);
-    }
-
-    .fs-xs {
-        font-size: 0.75rem;
-        letter-spacing: 0.05em;
-    }
-
-    .table-hover tbody tr:hover {
-        background-color: rgba(0, 123, 255, 0.02);
-        transition: background-color 0.2s ease;
-    }
-
-    .btn-white {
-        background-color: #fff;
-    }
-    .btn-white:hover {
-        background-color: #f8f9fa;
-    }
-</style>

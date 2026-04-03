@@ -42,8 +42,7 @@ public class AccountController : Controller
             return View();
         }
 
-        var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email.ToLower() == email);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
 
         if (user != null && _authService.VerifyPassword(user, password))
         {
@@ -55,10 +54,7 @@ public class AccountController : Controller
                 new Claim("UserId", user.Id.ToString())
             };
 
-            var claimsIdentity = new ClaimsIdentity(
-                claims,
-                CookieAuthenticationDefaults.AuthenticationScheme
-            );
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
@@ -70,7 +66,12 @@ public class AccountController : Controller
                 return LocalRedirect(returnUrl);
             }
 
-            return RedirectToAction("Index", "Home");
+            if (user.Role == "Admin")
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            return RedirectToAction("UserHome", "Home");
         }
 
         ViewBag.Error = "Email ou mot de passe incorrect.";

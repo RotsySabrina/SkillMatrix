@@ -224,6 +224,308 @@
     }
 }
 
+/* =========================
+   TALENTTRIS SHARED LAYOUT
+   ========================= */
+
+.tt-app-shell {
+    min-height: 100vh;
+    background: #f5f7fb;
+    color: #223548;
+}
+
+.tt-navbar {
+    background: linear-gradient(135deg, #2f5f8e 0%, #3f76a8 100%);
+    box-shadow: 0 8px 24px rgba(26, 57, 87, 0.16);
+    padding-top: 0.9rem;
+    padding-bottom: 0.9rem;
+}
+
+.tt-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+}
+
+.tt-brand-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255,255,255,0.18);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 1.15rem;
+    letter-spacing: 0.03em;
+}
+
+.tt-brand-name {
+    color: #ffffff;
+    font-size: 1.55rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.tt-brand-version {
+    margin-left: 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.92);
+    color: #2f5f8e;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.tt-nav-links .nav-link {
+    color: rgba(255,255,255,0.78) !important;
+    font-weight: 600;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    border-radius: 12px;
+    transition: all 0.2s ease-in-out;
+}
+
+.tt-nav-links .nav-link:hover,
+.tt-nav-links .nav-link.active {
+    color: #ffffff !important;
+    background: rgba(255,255,255,0.10);
+}
+
+.tt-user-menu {
+    margin-left: 1rem;
+}
+
+.tt-user-button {
+    border: none;
+    background: transparent;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 10px;
+    border-radius: 14px;
+}
+
+.tt-user-button:hover,
+.tt-user-button:focus {
+    color: #ffffff;
+    background: rgba(255,255,255,0.10);
+    box-shadow: none;
+}
+
+.tt-user-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.92);
+    color: #2f5f8e;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1rem;
+}
+
+.tt-user-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #ffffff;
+}
+
+.tt-dropdown-menu {
+    border: 1px solid #e4eaf1;
+    border-radius: 16px;
+    box-shadow: 0 18px 34px rgba(26, 57, 87, 0.12);
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.tt-dropdown-menu .dropdown-item {
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+}
+
+.tt-dropdown-menu .dropdown-item:hover {
+    background: #edf4fb;
+    color: #2f5f8e;
+}
+
+.tt-user-role {
+    font-size: 0.85rem;
+    color: #6f7f90;
+    padding: 6px 12px;
+}
+
+.tt-page-wrapper {
+    min-height: calc(100vh - 146px);
+}
+
+.tt-main-content {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+}
+
+.tt-footer {
+    background: #ffffff;
+    border-top: 1px solid #e6edf5;
+    padding: 16px 0;
+}
+
+.tt-footer-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.tt-footer-left {
+    color: #5f7184;
+    font-size: 0.95rem;
+}
+
+.tt-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.tt-footer-link {
+    color: #35689A;
+    font-size: 0.92rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.tt-footer-link:hover {
+    color: #274f76;
+    text-decoration: underline;
+}
+
+@media (max-width: 992px) {
+    .tt-brand-name {
+        font-size: 1.35rem;
+    }
+
+    .tt-brand-version {
+        display: none;
+    }
+
+    .tt-user-name {
+        display: none;
+    }
+
+    .tt-main-content {
+        padding-top: 1.4rem !important;
+    }
+}
+
+/* =========================
+   STANDARD USER HOME
+   ========================= */
+
+.tt-user-home {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.tt-user-hero {
+    background: linear-gradient(135deg, #ffffff 0%, #f7fbff 100%);
+    border: 1px solid #e4ebf3;
+    border-radius: 28px;
+    padding: 42px;
+    box-shadow: 0 12px 28px rgba(29, 57, 87, 0.06);
+}
+
+.tt-user-hero-content {
+    max-width: 760px;
+}
+
+.tt-user-kicker {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #edf4fb;
+    color: #35689A;
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+.tt-user-title {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: #18314c;
+    margin-bottom: 14px;
+    line-height: 1.1;
+}
+
+.tt-user-subtitle {
+    color: #607283;
+    font-size: 1.08rem;
+    line-height: 1.7;
+    margin-bottom: 0;
+}
+
+.tt-user-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 24px;
+}
+
+.tt-user-card {
+    background: #ffffff;
+    border: 1px solid #e6edf5;
+    border-radius: 22px;
+    padding: 26px;
+    box-shadow: 0 10px 24px rgba(26, 57, 87, 0.05);
+}
+
+.tt-user-card h3 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #1c3550;
+    margin-bottom: 12px;
+}
+
+.tt-user-card p {
+    color: #667789;
+    line-height: 1.65;
+    margin-bottom: 18px;
+}
+
+.tt-user-link {
+    color: #35689A;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.tt-user-link:hover {
+    color: #274f76;
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .tt-user-hero {
+        padding: 28px 22px;
+    }
+
+    .tt-user-title {
+        font-size: 1.9rem;
+    }
+
+    .tt-user-subtitle {
+        font-size: 1rem;
+    }
+}
+
 body {
     background-color: #f8f9fa;
     color: #2c3e50;
@@ -275,46 +577,6 @@ body {
     color: #6c757d;
     font-weight: 500;
     margin-bottom: 15px;
-}
-
-/* --- Navbar Customization --- */
-
-/* Ombre légère sous la navbar */
-.navbar {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
-}
-
-/* Espacement des éléments du menu */
-.nav-link {
-    font-weight: 500; /* Texte un peu plus gras */
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-    transition: color 0.2s ease-in-out;
-}
-
-/* Effet Hover sur les liens */
-.navbar-dark .navbar-nav .nav-link:hover {
-    color: #fff !important; /* Devient blanc pur au survol */
-    text-shadow: 0 0 5px rgba(255,255,255,0.3);
-}
-
-/* Style du menu déroulant */
-.dropdown-menu {
-    border-radius: 8px;
-    margin-top: 10px; 
-}
-
-/* Items du menu déroulant */
-.dropdown-item {
-    padding: 8px 20px;
-    font-size: 0.95rem;
-}
-.dropdown-item:hover {
-    background-color: #f8f9fa; /* Gris très clair au survol */
-    color: var(--bs-primary); /* Prend la couleur du thème */
-}
-.dropdown-item i {
-    opacity: 0.7; /* Icônes un peu plus discrètes */
 }
 
 
@@ -588,3 +850,4 @@ body {
     background: #fafbfc;
     border: 1px solid #dfe5ea;
 }
+

@@ -1,0 +1,75 @@
+@{
+    ViewData["Title"] = "Accueil";
+    var userName = ViewBag.UserName as string ?? User.Identity?.Name ?? "Utilisateur";
+}
+
+<div class="tt-user-home">
+    <section class="tt-user-hero">
+        <div class="tt-user-hero-content">
+            <span class="tt-user-kicker">Espace utilisateur</span>
+            <h1 class="tt-user-title">Bonjour @userName</h1>
+            <p class="tt-user-subtitle">
+                Explorez les profils, identifiez rapidement les consultants disponibles
+                et lancez votre recherche en quelques clics.
+            </p>
+
+            <div class="tt-user-actions">
+                <a class="btn btn-primary btn-lg rounded-pill px-4"
+                   asp-controller="Home" asp-action="ConsultantsList">
+                    Voir les consultants
+                </a>
+
+                <a class="btn btn-outline-primary btn-lg rounded-pill px-4"
+                   asp-controller="Home" asp-action="ConsultantsList"
+                   asp-route-searchQuery="Disponible">
+                    Profils disponibles
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <div class="row g-4 mt-1">
+        <div class="col-md-6 col-xl-4">
+            <div class="tt-user-card h-100">
+                <h3>Explorer les profils</h3>
+                <p>
+                    Accédez à la liste des consultants, leurs compétences, leurs statuts
+                    et leurs fiches détaillées.
+                </p>
+                <a class="tt-user-link" asp-controller="Home" asp-action="ConsultantsList">
+                    Ouvrir la liste
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-4">
+            <div class="tt-user-card h-100">
+                <h3>Trouver rapidement un expert</h3>
+                <p>
+                    Utilisez la recherche pour repérer un consultant selon un métier,
+                    une technologie ou un besoin précis.
+                </p>
+                <a class="tt-user-link"
+                   asp-controller="Home" asp-action="ConsultantsList"
+                   asp-route-searchQuery="C#">
+                    Lancer une recherche
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-12 col-xl-4">
+            <div class="tt-user-card h-100">
+                <h3>Profils disponibles</h3>
+                <p>
+                    Consultez rapidement les profils non affectés pour identifier
+                    les ressources mobilisables immédiatement.
+                </p>
+                <a class="tt-user-link"
+                   asp-controller="Home" asp-action="ConsultantsList"
+                   asp-route-searchQuery="Disponible">
+                    Voir les disponibles
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

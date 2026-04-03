@@ -1,122 +1,189 @@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var currentPage = ViewContext.RouteData.Values["page"]?.ToString();
+
+    var currentUser = User?.Identity?.IsAuthenticated == true
+        ? User.Identity!.Name ?? "Utilisateur"
+        : "Utilisateur";
+
+    var userInitial = !string.IsNullOrWhiteSpace(currentUser)
+        ? currentUser.Trim()[0].ToString().ToUpper()
+        : "T";
+
+    bool isHomeActive = currentController == "Home" && (currentAction == "Index" || currentAction == "UserHome");
+    bool isConsultantsActive = currentController == "Home" && currentAction == "ConsultantsList";
+    bool isTimelineActive = currentPage == "/Dashboard/Timeline";
+    bool isAdminDataActive =
+        currentPage != null &&
+        (currentPage.StartsWith("/Consultants") || currentPage.StartsWith("/Skills"));
+}
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - SkillMatrix</title>
-    
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <title>@ViewData["Title"] - TalentTris</title>
 
     <link rel="stylesheet" href="~/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body>
+<body class="tt-app-shell">
     <header>
+        <nav class="navbar navbar-expand-lg navbar-dark tt-navbar">
+            <div class="container-fluid px-4">
+                <a class="navbar-brand tt-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="tt-brand-name">TalentTris</span>
+                </a>
 
-        <header>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm mb-3">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand fw-bold text-uppercase d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
-                <i class="bi bi-grid-3x3-gap-fill me-2 fs-4"></i>
-                SkillMatrix <span class="badge bg-light text-primary ms-2" style="font-size: 0.6em;">v1.0</span>
-            </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ttMainNav"
+                        aria-controls="ttMainNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" 
-                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                
-                <ul class="navbar-nav flex-grow-1">
-                    <li class="nav-item">
-                        <a class="nav-link active d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
-                            <i class="bi bi-house-door me-1"></i> Accueil
-                        </a>
-                    </li>
-                    @* 🟢 Visible par TOUT LE MONDE connecté *@
-                    @if (User.Identity.IsAuthenticated)
-                    {
+                <div class="collapse navbar-collapse" id="ttMainNav">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 tt-nav-links">
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="ConsultantsList">
-                                <i class="bi bi-search me-1"></i>Listes des Consultants
-                            </a>
-                        </li>
-                        @* 🔴 RESERVE AUX ADMINS : Gestion des données *@
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" data-bs-toggle="dropdown">
-                                    <i class="bi bi-shield-lock me-1"></i> Gestion des données
-                                </a>
-                                <ul class="dropdown-menu shadow">
-                                    <li><a class="dropdown-item" asp-area="Admin" asp-page="/Consultants/Index">Gestion Consultants</a></li>
-                                    <li><a class="dropdown-item" asp-area="Admin" asp-page="/Skills/Index">Gestion Compétences</a></li>
-                                </ul>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="Admin" asp-page="/Dashboard/Timeline">Timeline</a>
-                            </li>
-                        }
-                    }
-                </ul>
-
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item me-3">
-                        <a class="nav-link position-relative" href="#">
-                            <i class="bi bi-bell fs-5"></i>
-                            <span class="position-absolute top-10 start-90 translate-middle p-1 bg-danger border border-light rounded-circle">
-                                <span class="visually-hidden">New alerts</span>
-                            </span>
-                        </a>
-                    </li>
-                    
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <div class="bg-white text-primary rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 32px; height: 32px;">
-                                <strong></strong> </div>
-                            <span>@User.Identity.Name</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow" aria-labelledby="userDropdown">
-                            @if (User.Identity.IsAuthenticated)
+                            @if (User?.Identity?.IsAuthenticated == true && !User.IsInRole("Admin"))
                             {
-                                <li class="nav-item border-start ps-3">
-                                    <a class="btn btn-sm btn-light rounded-pill shadow-sm" asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right me-1"></i>Déconnexion</a>
-                                </li>
+                                <a class="nav-link @(isHomeActive ? "active" : "")"
+                                asp-area="" asp-controller="Home" asp-action="UserHome">
+                                    Accueil
+                                </a>
                             }
                             else
                             {
+                                <a class="nav-link @(isHomeActive ? "active" : "")"
+                                asp-area="" asp-controller="Home" asp-action="Index">
+                                    Accueil
+                                </a>
+                            }
+                        </li>
+
+                        @if (User?.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link @(isConsultantsActive ? "active" : "")"
+                                   asp-area="" asp-controller="Home" asp-action="ConsultantsList">
+                                    Consultants
+                                </a>
+                            </li>
+
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle @(isAdminDataActive ? "active" : "")"
+                                       href="#"
+                                       id="ttDataDropdown"
+                                       role="button"
+                                       data-bs-toggle="dropdown"
+                                       aria-expanded="false">
+                                        Gestion des données
+                                    </a>
+                                    <ul class="dropdown-menu tt-dropdown-menu" aria-labelledby="ttDataDropdown">
+                                        <li>
+                                            <a class="dropdown-item" asp-area="Admin" asp-page="/Consultants/Index">
+                                                Gestion consultants
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-area="Admin" asp-page="/Consultants/Create">
+                                                Ajouter un consultant
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-area="Admin" asp-page="/Consultants/Import">
+                                                Import CSV
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-area="Admin" asp-page="/Skills/Index">
+                                                Gestion compétences
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+
                                 <li class="nav-item">
-                                    <a class="btn btn-light btn-sm rounded-pill px-4" asp-controller="Account" asp-action="Login">Connexion</a>
+                                    <a class="nav-link @(isTimelineActive ? "active" : "")"
+                                       asp-area="Admin" asp-page="/Dashboard/Timeline">
+                                        Timeline
+                                    </a>
                                 </li>
                             }
-                        </ul>
-                    </li>
-                </ul>
+                        }
+                    </ul>
+
+                    @if (User?.Identity?.IsAuthenticated == true)
+                    {
+                        <div class="tt-user-menu dropdown">
+                            <button class="btn tt-user-button dropdown-toggle"
+                                    type="button"
+                                    id="ttUserDropdown"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                <span class="tt-user-avatar">@userInitial</span>
+                                <span class="tt-user-name">@currentUser</span>
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end tt-dropdown-menu" aria-labelledby="ttUserDropdown">
+                                <li>
+                                    <span class="dropdown-item-text tt-user-role">Connecté</span>
+                                </li>
+                                <li><hr class="dropdown-divider" /></li>
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="Index">
+                                        Tableau de bord
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="UserHome">
+                                        Accueil utilisateur
+                                    </a>
+                                }
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="Logout">
+                                        Déconnexion
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="ms-lg-3">
+                            <a class="btn btn-light btn-sm rounded-pill px-4"
+                               asp-area="" asp-controller="Account" asp-action="Login">
+                                Connexion
+                            </a>
+                        </div>
+                    }
+                </div>
             </div>
-        </div>
-    </nav>
-</header>
+        </nav>
     </header>
 
-    <div class="container">
-        <main role="main" class="pb-3">
-            <!-- C'est ici que le contenu de votre page spécifique (par exemple Index.cshtml) sera injecté -->
-            @RenderBody() 
+    <div class="tt-page-wrapper">
+        <main class="tt-main-content container-fluid px-4 py-4">
+            @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2024 - SkillMatrix.Web - <a asp-area="" asp-page="/Privacy">Privacy</a>
+    <footer class="tt-footer">
+        <div class="container-fluid px-4">
+            <div class="tt-footer-inner">
+                <div class="tt-footer-left">
+                    © 2026 TalentTris — Smart staffing & consulting workspace
+                </div>
+            </div>
         </div>
     </footer>
 
-    <!-- Liens vers vos fichiers JavaScript -->
     <script src="~/lib/jquery/jquery.min.js"></script>
     <script src="~/lib/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Point d'injection optionnel pour des scripts spécifiques à une page -->
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

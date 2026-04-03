@@ -526,60 +526,6 @@
     }
 }
 
-body {
-    background-color: #f8f9fa;
-    color: #2c3e50;
-}
-
-/* Style de la carte Consultant */
-.consultant-card {
-    border: none;
-    border-radius: 12px;
-    background: white;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05); 
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    overflow: hidden; /* Pour que l'image ou le header ne dépasse pas */
-}
-
-/* Effet au survol de la souris */
-.consultant-card:hover {
-    transform: translateY(-5px); /* La carte monte légèrement */
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* L'ombre grandit */
-}
-
-/* En-tête de la carte avec couleur selon statut (optionnel) */
-.card-header-status {
-    height: 6px;
-    width: 100%;
-}
-.status-mission { background-color: #28a745; } /* Vert */
-.status-inter { background-color: #dc3545; }   /* Rouge */
-.status-dispo { background-color: #ffc107; }   /* Jaune */
-
-/* Badges de compétences */
-.skill-badge {
-    font-size: 0.85em;
-    padding: 5px 10px;
-    border-radius: 20px;
-    background-color: #e9ecef;
-    color: #495057;
-    margin-right: 5px;
-    margin-bottom: 5px;
-    display: inline-block;
-}
-
-/* Titre et texte */
-.consultant-name {
-    font-weight: 700;
-    color: #2c3e50;
-}
-.consultant-title {
-    color: #6c757d;
-    font-weight: 500;
-    margin-bottom: 15px;
-}
-
-
 .timeline-main-container {
     display: flex;
     background: white;
@@ -886,4 +832,177 @@ body {
 .dashboard-inline-alert {
     border-radius: 14px;
     font-size: 0.92rem;
+}
+
+/* =========================
+   CONSULTANTS LIST PAGE
+   ========================= */
+
+.consultant-page-title {
+    font-size: 3rem;
+    color: #18314c;
+}
+
+.consultant-page-subtitle {
+    font-size: 1.1rem;
+}
+
+.consultant-search-box {
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.consultant-reset-link:hover {
+    color: #35689A !important;
+}
+
+.consultant-results-summary {
+    color: #607283;
+}
+
+.consultant-search-highlight {
+    color: #35689A;
+    font-weight: 700;
+}
+
+.consultant-empty-state {
+    background: #ffffff;
+    border: 1px solid #e6edf5;
+    border-radius: 24px;
+    padding: 48px 24px;
+    box-shadow: 0 12px 28px rgba(29, 57, 87, 0.05);
+}
+
+.consultant-empty-icon {
+    font-size: 2.4rem;
+    color: #35689A;
+}
+
+.consultant-card-modern {
+    border-radius: 22px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background: #ffffff;
+}
+
+.consultant-card-modern:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px rgba(26, 57, 87, 0.08) !important;
+}
+
+.consultant-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #eef3f9;
+    color: #35689A;
+    font-weight: 800;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.consultant-name {
+    color: #2b3540;
+    line-height: 1.2;
+}
+
+.consultant-title {
+    font-size: 1rem;
+}
+
+.consultant-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.consultant-status-badge.status-disponible {
+    background: #eaf7ef;
+    color: #198754;
+}
+
+.consultant-status-badge.status-en-mission {
+    background: #e7f1ff;
+    color: #0d6efd;
+}
+
+.consultant-status-badge.status-intercontrat {
+    background: #fff1e8;
+    color: #fd7e14;
+}
+
+.consultant-status-badge.status-default {
+    background: #f1f3f5;
+    color: #6c757d;
+}
+
+.consultant-skills {
+    min-height: 54px;
+}
+
+.skill-badge {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: #f8f5ef;
+    border: 1px solid #e3dccc;
+    color: #574c3a;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-right: 6px;
+    margin-bottom: 6px;
+}
+
+.consultant-skill-more {
+    color: #6d7b88;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.consultant-action-btn,
+.consultant-cv-btn {
+    border-radius: 14px;
+    font-weight: 700;
+}
+
+.consultant-cv-btn {
+    border: 1px solid #f0d7d7;
+    color: #d64545;
+    background: #fff8f8;
+}
+
+.consultant-cv-btn:hover {
+    color: #b92d2d;
+    background: #fff1f1;
+    border-color: #e9c4c4;
+}
+
+.consultant-pagination .page-link {
+    border-radius: 10px !important;
+    margin: 0 4px;
+    color: #35689A;
+    border: 1px solid #dbe4ee;
+    font-weight: 600;
+}
+
+.consultant-pagination .page-item.active .page-link {
+    background: #35689A;
+    border-color: #35689A;
+    color: #ffffff;
+}
+
+.consultant-pagination .page-item.disabled .page-link {
+    color: #98a5b3;
+    background: #f3f6f9;
+}
+
+@media (max-width: 768px) {
+    .consultant-page-title {
+        font-size: 2.2rem;
+    }
 }

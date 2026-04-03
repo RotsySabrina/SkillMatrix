@@ -47,7 +47,7 @@
                 <div class="collapse navbar-collapse" id="ttMainNav">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0 tt-nav-links">
                         <li class="nav-item">
-                            @if (User?.Identity?.IsAuthenticated == true && !User.IsInRole("Admin"))
+                            @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
                             {
                                 <a class="nav-link @(isHomeActive ? "active" : "")"
                                 asp-area="Admin" asp-page="/Dashboard/Index">
@@ -57,7 +57,7 @@
                             else
                             {
                                 <a class="nav-link @(isHomeActive ? "active" : "")"
-                                asp-area="" asp-controller="Home" asp-action="Index">
+                                asp-area="" asp-controller="Home" asp-action="UserHome">
                                     Accueil
                                 </a>
                             }

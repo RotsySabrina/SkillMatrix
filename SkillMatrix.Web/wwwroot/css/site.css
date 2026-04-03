@@ -90,6 +90,28 @@
 .auth-alert {
     border-radius: 16px;
     margin-bottom: 22px;
+    padding: 14px 16px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    position: relative;
+}
+
+.auth-alert.alert-danger {
+    background: #fdecec;
+    border-color: #f5c2c7;
+    color: #842029;
+    box-shadow: 0 6px 16px rgba(220, 53, 69, 0.08);
+}
+
+.auth-alert.alert-danger::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 10px;
+    bottom: 10px;
+    width: 4px;
+    border-radius: 999px;
+    background: #dc3545;
 }
 
 .auth-form {

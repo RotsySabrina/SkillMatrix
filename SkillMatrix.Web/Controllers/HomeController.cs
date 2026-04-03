@@ -26,15 +26,14 @@ public class HomeController : Controller
     }
 
     [Authorize]
-    public async Task<IActionResult> Index()
+    public IActionResult Index()
     {
-        if (!User.IsInRole("Admin"))
+        if (User.IsInRole("Admin"))
         {
-            return RedirectToAction("UserHome");
+            return RedirectToPage("/Dashboard/Index", new { area = "Admin" });
         }
 
-        var model = await _adoNetService.GetDashboardStatsAsync();
-        return View(model);
+        return RedirectToAction("UserHome");
     }
 
     [Authorize]

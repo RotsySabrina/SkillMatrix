@@ -1,0 +1,167 @@
+@page
+@model SkillMatrix.Web.Areas_Admin_Pages_Dashboard.IndexModel
+@{
+    ViewData["Title"] = "Tableau de bord";
+}
+
+<div class="container-fluid">
+    <div class="mb-4">
+        <h1 class="fw-bold">Tableau de bord</h1>
+        <p class="text-muted mb-0">
+            Vue d’ensemble des ressources TalentTris.
+        </p>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm border-0 h-100 dashboard-stat-card bg-primary text-white">
+                <div class="card-body">
+                    <div class="text-uppercase small fw-semibold">Consultants</div>
+                    <div class="display-5 fw-bold mt-2">@Model.Dashboard.TotalConsultants</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm border-0 h-100 dashboard-stat-card border-start border-4 border-success">
+                <div class="card-body">
+                    <div class="text-uppercase small fw-semibold text-muted">En mission</div>
+                    <div class="display-5 fw-bold mt-2 text-success">@Model.Dashboard.EnMissionCount</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm border-0 h-100 dashboard-stat-card border-start border-4 border-warning">
+                <div class="card-body">
+                    <div class="text-uppercase small fw-semibold text-muted">Intercontrat</div>
+                    <div class="display-5 fw-bold mt-2 text-warning">@Model.Dashboard.IntercontratCount</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm border-0 h-100 dashboard-stat-card border-start border-4 border-info">
+                <div class="card-body">
+                    <div class="text-uppercase small fw-semibold text-muted">Disponibles</div>
+                    <div class="display-5 fw-bold mt-2 text-info">@Model.Dashboard.DisponibleCount</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm border-0 h-100 dashboard-stat-card border-start border-4 border-secondary">
+                <div class="card-body">
+                    <div class="text-uppercase small fw-semibold text-muted">Missions actives</div>
+                    <div class="display-5 fw-bold mt-2 text-secondary">@Model.Dashboard.MissionsActivesAujourdHui</div>
+                    <div class="small text-muted mt-2">Aujourd’hui</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white fw-bold">
+                    Compétences clés
+                </div>
+                <div class="card-body">
+                    @if (Model.Dashboard.TopSkills.Any())
+                    {
+                        @foreach (var skill in Model.Dashboard.TopSkills)
+                        {
+                            var width = Math.Min(skill.Count * 20, 100);
+
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span class="fw-semibold">@skill.SkillNom</span>
+                                    <span class="text-muted">@skill.Count profil(s)</span>
+                                </div>
+                                <div class="progress mt-2" style="height: 10px;">
+                                    <div class="progress-bar bg-primary" style="width:@width%"></div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">Aucune compétence disponible.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white fw-bold">
+                    Actions rapides
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <div class="d-grid gap-3">
+                        <a asp-area="Admin" asp-page="/Consultants/Create" class="btn btn-primary rounded-pill">
+                            Ajouter un consultant
+                        </a>
+                        <a asp-area="Admin" asp-page="/Consultants/Import" class="btn btn-outline-primary rounded-pill">
+                            Importer un CSV
+                        </a>
+                        <a asp-area="Admin" asp-page="/Dashboard/Timeline" class="btn btn-outline-secondary rounded-pill">
+                            Ouvrir la timeline
+                        </a>
+                        <a asp-controller="Home" asp-action="ConsultantsList" class="btn btn-outline-dark rounded-pill">
+                            Rechercher un expert
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white fw-bold">
+                    Consultants récemment ajoutés
+                </div>
+                <div class="card-body">
+                    @if (Model.Dashboard.RecentConsultants.Any())
+                    {
+                        <div class="row g-3">
+                            @foreach (var consultant in Model.Dashboard.RecentConsultants)
+                            {
+                                var statusClass = consultant.Statut switch
+                                {
+                                    "Disponible" => "bg-success-subtle text-success-emphasis",
+                                    "En Mission" => "bg-primary-subtle text-primary-emphasis",
+                                    "Intercontrat" => "bg-warning-subtle text-warning-emphasis",
+                                    _ => "bg-secondary-subtle text-secondary-emphasis"
+                                };
+
+                                <div class="col-md-6 col-xl-4">
+                                    <div class="border rounded-4 p-3 h-100 recent-consultant-card">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div>
+                                                <h6 class="mb-1 fw-bold">@consultant.Prenom @consultant.Nom</h6>
+                                                <div class="text-muted small">@consultant.Titre</div>
+                                            </div>
+                                            <span class="badge @statusClass">@consultant.Statut</span>
+                                        </div>
+
+                                        <a asp-controller="Home"
+                                           asp-action="Details"
+                                           asp-route-id="@consultant.Id"
+                                           class="btn btn-sm btn-outline-primary rounded-pill mt-2">
+                                            Voir le profil
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">Aucun consultant récent à afficher.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

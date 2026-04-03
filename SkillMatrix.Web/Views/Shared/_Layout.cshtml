@@ -11,7 +11,9 @@
         ? currentUser.Trim()[0].ToString().ToUpper()
         : "T";
 
-    bool isHomeActive = currentController == "Home" && (currentAction == "Index" || currentAction == "UserHome");
+    bool isHomeActive =
+    (currentPage == "/Dashboard/Index") ||
+    (currentController == "Home" && currentAction == "UserHome");
     bool isConsultantsActive = currentController == "Home" && currentAction == "ConsultantsList";
     bool isTimelineActive = currentPage == "/Dashboard/Timeline";
     bool isAdminDataActive =
@@ -48,7 +50,7 @@
                             @if (User?.Identity?.IsAuthenticated == true && !User.IsInRole("Admin"))
                             {
                                 <a class="nav-link @(isHomeActive ? "active" : "")"
-                                asp-area="" asp-controller="Home" asp-action="UserHome">
+                                asp-area="Admin" asp-page="/Dashboard/Index">
                                     Accueil
                                 </a>
                             }
@@ -134,7 +136,7 @@
                                 <li><hr class="dropdown-divider" /></li>
                                 @if (User.IsInRole("Admin"))
                                 {
-                                    <a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="Index">
+                                    <a class="dropdown-item" asp-area="Admin" asp-page="/Dashboard/Index">
                                         Tableau de bord
                                     </a>
                                 }

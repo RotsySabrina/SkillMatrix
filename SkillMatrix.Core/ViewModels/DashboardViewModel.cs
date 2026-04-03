@@ -7,7 +7,7 @@ namespace SkillMatrix.Core.ViewModels{
         public int EnMissionCount { get; set; }
         public int DisponibleCount { get; set; }
         public int IntercontratCount { get; set; }
-        
+        public int MissionsActivesAujourdHui {get; set;}
         public List<SkillStat> TopSkills { get; set; } = new();
         
         public List<Consultant> RecentConsultants { get; set; } = new();

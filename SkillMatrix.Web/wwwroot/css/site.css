@@ -851,3 +851,16 @@ body {
     border: 1px solid #dfe5ea;
 }
 
+.dashboard-stat-card {
+    border-radius: 18px;
+}
+
+.recent-consultant-card {
+    background: #fbfcfe;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recent-consultant-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(26, 57, 87, 0.08);
+}

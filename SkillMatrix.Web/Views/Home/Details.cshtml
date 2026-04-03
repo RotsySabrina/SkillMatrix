@@ -2,38 +2,80 @@
 
 @{
     ViewData["Title"] = $"Profil de {Model.Prenom} {Model.Nom}";
+
+    var fullName = $"{Model.Prenom} {Model.Nom}".Trim();
+    var firstInitial = !string.IsNullOrWhiteSpace(Model.Prenom) ? Model.Prenom.Trim()[0].ToString().ToUpper() : "";
+    var lastInitial = !string.IsNullOrWhiteSpace(Model.Nom) ? Model.Nom.Trim()[0].ToString().ToUpper() : "";
+    var initials = string.IsNullOrWhiteSpace(firstInitial + lastInitial) ? "?" : firstInitial + lastInitial;
+
+    var skillCount = Model.ConsultantSkills?.Count ?? 0;
+    var missionCount = Model.Missions?.Count ?? 0;
+
+    var statusClass = Model.Statut switch
+    {
+        "Disponible" => "detail-status-disponible",
+        "En Mission" => "detail-status-mission",
+        "Intercontrat" => "detail-status-intercontrat",
+        _ => "detail-status-default"
+    };
 }
 
-<div class="container py-5">
-    
-    @* Bouton Retour *@
-    <div class="mb-4">
-        <a asp-action="ConsultantsList" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Retour au catalogue
+<div class="container py-5 consultant-detail-page">
+
+    <div class="consultant-detail-topbar mb-4">
+        <a asp-action="ConsultantsList" class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="bi bi-arrow-left me-1"></i> Retour au catalogue
         </a>
-        <a asp-action="DownloadCv" asp-route-id="@Model.Id" class="btn btn-danger float-end">
-            <i class="bi bi-file-pdf"></i> Télécharger en PDF
+
+        <a asp-action="DownloadCv" asp-route-id="@Model.Id" class="btn btn-danger rounded-pill px-4">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Télécharger en PDF
         </a>
     </div>
 
-    <div class="card shadow-lg border-0 overflow-hidden">
-        
-        @* 1. EN-TÊTE DU CV *@
-        <div class="bg-primary text-white p-5">
-            <div class="row align-items-center">
-                <div class="col-md-2 text-center">
-                    <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 100px; height: 100px; font-size: 2.5rem; font-weight: bold;">
-                        @Model.Prenom.Substring(0,1)@Model.Nom.Substring(0,1)
+    <div class="card consultant-detail-card border-0 shadow-sm overflow-hidden">
+        <div class="consultant-detail-hero">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-2 text-center text-lg-start">
+                    <div class="consultant-detail-avatar mx-auto mx-lg-0">
+                        @initials
                     </div>
                 </div>
-                <div class="col-md-10">
-                    <h1 class="display-5 fw-bold">@Model.Prenom @Model.Nom</h1>
-                    <h3 class="fw-light opacity-75">@Model.Titre</h3>
-                    <div class="mt-3">
-                        <span class="badge bg-light text-primary me-2">@Model.ExperienceTotale ans d'expérience</span>
-                        <span class="badge @(Model.Statut == "Intercontrat" ? "bg-success" : "bg-warning")">
+
+                <div class="col-lg-10">
+                    <h1 class="consultant-detail-name mb-2">@fullName</h1>
+                    <div class="consultant-detail-title mb-3">@Model.Titre</div>
+
+                    <div class="consultant-detail-badges mb-4">
+                        <span class="consultant-detail-pill">
+                            @Model.ExperienceTotale an(s) d’expérience
+                        </span>
+
+                        <span class="consultant-detail-pill @statusClass">
                             @Model.Statut
                         </span>
+                    </div>
+
+                    <div class="row g-3 consultant-detail-metrics">
+                        <div class="col-sm-4">
+                            <div class="consultant-detail-metric-box">
+                                <div class="consultant-detail-metric-value">@skillCount</div>
+                                <div class="consultant-detail-metric-label">Compétence(s)</div>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-4">
+                            <div class="consultant-detail-metric-box">
+                                <div class="consultant-detail-metric-value">@missionCount</div>
+                                <div class="consultant-detail-metric-label">Mission(s)</div>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-4">
+                            <div class="consultant-detail-metric-box">
+                                <div class="consultant-detail-metric-value">#@Model.Id</div>
+                                <div class="consultant-detail-metric-label">Référence profil</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -41,69 +83,85 @@
 
         <div class="card-body p-0">
             <div class="row g-0">
-                
-                @* 2. COLONNE GAUCHE : SKILLS & INFOS *@
-                <div class="col-md-4 bg-light p-5 border-end">
-                    
-                    <hr class="my-4">
+                <div class="col-lg-4 consultant-detail-sidebar">
+                    <div class="consultant-detail-section">
+                        <h5 class="consultant-detail-section-title">Compétences</h5>
 
-                    <h5 class="text-uppercase text-primary fw-bold mb-4">Compétences</h5>
-                    @if (Model.ConsultantSkills.Any())
-                    {
-                        foreach (var skill in Model.ConsultantSkills.OrderByDescending(s => s.Niveau))
+                        @if (Model.ConsultantSkills != null && Model.ConsultantSkills.Any())
                         {
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between">
-                                    <span class="fw-bold">@skill.Skill.Nom</span>
-                                    <span class="text-muted small">Niv. @skill.Niveau</span>
-                                </div>
-                                <div class="progress" style="height: 6px;">
-                                    @* Calcul du pourcentage : Niveau 1-5 converti en 20-100% *@
-                                    <div class="progress-bar bg-primary" role="progressbar" style="width: @(skill.Niveau * 20)%"></div>
-                                </div>
-                            </div>
-                        }
-                    }
-                    else
-                    {
-                        <p class="text-muted fst-italic">Aucune compétence listée.</p>
-                    }
-                </div>
-
-                @* Section Expériences *@
-                <div class="col-md-8 p-5 bg-white">
-                    <h4 class="text-uppercase text-primary fw-bold mb-4">
-                        <i class="bi bi-briefcase me-2"></i> Expériences Professionnelles
-                    </h4>
-
-                    @if (Model.Missions != null && Model.Missions.Any())
-                    {
-                        <div class="timeline">
-                            @foreach (var mission in Model.Missions)
+                            foreach (var skill in Model.ConsultantSkills.OrderByDescending(s => s.Niveau))
                             {
-                                <div class="mb-5 position-relative ps-4 border-start border-3 border-light">
-                                    <div class="position-absolute top-0 start-0 translate-middle bg-primary rounded-circle" style="width: 12px; height: 12px;"></div>
-                                    
-                                    <h5 class="fw-bold text-dark mb-1">@mission.TitreProjet</h5>
-                                    <div class="text-primary fw-bold mb-2">
-                                        @mission.Client?.Nom @* Nom du Client/Entreprise *@
-                                        <span class="text-muted fw-normal ms-2">
-                                            | @(string.IsNullOrEmpty(mission.RoleOccupe) ? "" : mission.RoleOccupe + " |") 
-                                            @mission.DateDebut.ToString("MMM yyyy") - 
-                                            @(mission.DateFin.HasValue ? mission.DateFin.Value.ToString("MMM yyyy") : "Aujourd'hui")
-                                        </span>
+                                <div class="consultant-skill-row">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="fw-bold">@((skill.Skill?.Nom) ?? "Compétence inconnue")</span>
+                                        <span class="text-muted small">Niv. @skill.Niveau</span>
                                     </div>
-                                    <p class="text-secondary mt-2" style="white-space: pre-line;">
-                                        @mission.Description
-                                    </p>
+
+                                    <div class="progress consultant-skill-progress">
+                                        <div class="progress-bar bg-primary"
+                                             role="progressbar"
+                                             style="width: @(skill.Niveau * 20)%">
+                                        </div>
+                                    </div>
                                 </div>
                             }
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="alert alert-light">Aucune mission enregistrée.</div>
-                    }
+                        }
+                        else
+                        {
+                            <div class="consultant-empty-box">
+                                Aucune compétence renseignée.
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-lg-8 consultant-detail-main">
+                    <div class="consultant-detail-section">
+                        <h4 class="consultant-detail-main-title">
+                            <i class="bi bi-briefcase me-2"></i>Expériences professionnelles
+                        </h4>
+
+                        @if (Model.Missions != null && Model.Missions.Any())
+                        {
+                            <div class="consultant-mission-timeline">
+                                @foreach (var mission in Model.Missions)
+                                {
+                                    <div class="consultant-mission-item">
+                                        <div class="consultant-mission-dot"></div>
+
+                                        <div class="consultant-mission-content">
+                                            <h5 class="consultant-mission-title mb-1">@mission.TitreProjet</h5>
+
+                                            <div class="consultant-mission-meta mb-2">
+                                                <span class="fw-semibold text-primary">@mission.Client?.Nom</span>
+                                                <span class="mx-2">•</span>
+                                                <span>@(string.IsNullOrWhiteSpace(mission.RoleOccupe) ? "Rôle non précisé" : mission.RoleOccupe)</span>
+                                            </div>
+
+                                            <div class="consultant-mission-dates mb-2">
+                                                @mission.DateDebut.ToString("MMM yyyy")
+                                                -
+                                                @(mission.DateFin.HasValue ? mission.DateFin.Value.ToString("MMM yyyy") : "Aujourd’hui")
+                                            </div>
+
+                                            @if (!string.IsNullOrWhiteSpace(mission.Description))
+                                            {
+                                                <p class="consultant-mission-description mb-0">
+                                                    @mission.Description
+                                                </p>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="consultant-empty-box">
+                                Aucune mission enregistrée pour ce consultant.
+                            </div>
+                        }
+                    </div>
                 </div>
             </div>
         </div>

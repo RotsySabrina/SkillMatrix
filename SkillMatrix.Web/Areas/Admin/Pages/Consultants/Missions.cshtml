@@ -1,0 +1,216 @@
+@page "{id:int}"
+@model SkillMatrix.Web.Areas_Admin_Pages_Consultants.MissionsModel
+
+@{
+    ViewData["Title"] = "Gérer les missions";
+
+    var statusClass = Model.ConsultantProfile.Statut switch
+    {
+        "Disponible" => "bg-info text-white",
+        "En Mission" => "bg-success",
+        "Intercontrat" => "bg-warning text-dark",
+        _ => "bg-secondary"
+    };
+}
+
+<div class="container pb-5 admin-missions-page">
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div>
+                <h1 class="fw-bold mb-1">Gérer les missions</h1>
+                <h4 class="text-muted mb-2">@Model.ConsultantProfile.Prenom @Model.ConsultantProfile.Nom</h4>
+                <span class="badge rounded-pill px-3 py-2 @statusClass">@Model.ConsultantProfile.Statut</span>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <a asp-page="./Edit" asp-route-id="@Model.ConsultantProfile.Id" class="btn btn-outline-secondary">
+                    <i class="bi bi-person-gear me-1"></i> Retour au profil
+                </a>
+                <a asp-page="./Index" class="btn btn-outline-dark">
+                    Retour à la liste
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success admin-flash-alert mb-4">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger admin-flash-alert mb-4">
+            <i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0 mission-form-card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-plus-circle me-2"></i>Ajouter une mission
+                    </h5>
+                </div>
+
+                <div class="card-body">
+                    <form method="post" asp-page-handler="Add">
+                        <input type="hidden" name="consultantId" value="@Model.ConsultantProfile.Id" />
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="MissionInput.TitreProjet" class="form-label fw-bold">Projet</label>
+                            <input asp-for="MissionInput.TitreProjet" class="form-control" />
+                            <span asp-validation-for="MissionInput.TitreProjet" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="MissionInput.ClientId" class="form-label fw-bold">Client</label>
+                            <select asp-for="MissionInput.ClientId" asp-items="Model.ClientOptions" class="form-select">
+                                <option value="">-- Sélectionner un client --</option>
+                            </select>
+                            <span asp-validation-for="MissionInput.ClientId" class="text-danger"></span>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="MissionInput.DateDebut" class="form-label fw-bold">Date début</label>
+                                <input asp-for="MissionInput.DateDebut" class="form-control" type="date" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="MissionInput.DateFin" class="form-label fw-bold">Date fin</label>
+                                <input asp-for="MissionInput.DateFin" class="form-control" type="date" />
+                                <span asp-validation-for="MissionInput.DateFin" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label asp-for="MissionInput.RoleOccupe" class="form-label fw-bold">Rôle occupé</label>
+                            <input asp-for="MissionInput.RoleOccupe" class="form-control" />
+                        </div>
+
+                        <div class="mt-3">
+                            <label asp-for="MissionInput.Description" class="form-label fw-bold">Description</label>
+                            <textarea asp-for="MissionInput.Description" class="form-control" rows="4"></textarea>
+                        </div>
+
+                        <div class="mt-4 d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check2-circle me-1"></i> Ajouter la mission
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">Missions existantes</h4>
+                <span class="badge bg-light text-dark border">
+                    @Model.ExistingMissions.Count mission(s)
+                </span>
+            </div>
+
+            @if (Model.ExistingMissions.Any())
+            {
+                <div class="d-grid gap-3">
+                    @foreach (var mission in Model.ExistingMissions)
+                    {
+                        <div class="card border-0 shadow-sm mission-manage-card">
+                            <div class="card-body">
+                                <form method="post" asp-page-handler="Update">
+                                    <input type="hidden" name="consultantId" value="@Model.ConsultantProfile.Id" />
+                                    <input type="hidden" name="missionId" value="@mission.Id" />
+
+                                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                                        <div>
+                                            <h5 class="fw-bold mb-1">@mission.TitreProjet</h5>
+                                            <div class="text-muted small">
+                                                Client actuel : @(mission.Client?.Nom ?? "Non renseigné")
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex gap-2">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-save me-1"></i> Enregistrer
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small">Projet</label>
+                                            <input type="text" name="titreProjet" class="form-control" value="@mission.TitreProjet" />
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small">Client</label>
+                                            <select name="clientId" class="form-select">
+                                                @foreach (var client in Model.ClientOptions)
+                                                {
+                                                    if (client.Value == mission.ClientId.ToString())
+                                                    {
+                                                        <option value="@client.Value" selected>@client.Text</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@client.Value">@client.Text</option>
+                                                    }
+                                                }
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold small">Date début</label>
+                                            <input type="date" name="dateDebut" class="form-control" value="@mission.DateDebut.ToString("yyyy-MM-dd")" />
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold small">Date fin</label>
+                                            <input type="date" name="dateFin" class="form-control" value="@(mission.DateFin.HasValue ? mission.DateFin.Value.ToString("yyyy-MM-dd") : "")" />
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold small">Rôle</label>
+                                            <input type="text" name="roleOccupe" class="form-control" value="@mission.RoleOccupe" />
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label class="form-label fw-bold small">Description</label>
+                                            <textarea name="description" class="form-control" rows="3">@mission.Description</textarea>
+                                        </div>
+                                    </div>
+                                </form>
+
+                                <form method="post" asp-page-handler="Delete" class="mt-3"
+                                      onsubmit="return confirm('Supprimer cette mission ?');">
+                                    <input type="hidden" name="consultantId" value="@Model.ConsultantProfile.Id" />
+                                    <input type="hidden" name="missionId" value="@mission.Id" />
+
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash me-1"></i> Supprimer la mission
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-light border rounded-4">
+                    Aucune mission enregistrée pour ce consultant.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

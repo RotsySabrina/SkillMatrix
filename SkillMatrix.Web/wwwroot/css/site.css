@@ -1381,3 +1381,26 @@
         font-size: 2rem;
     }
 }
+
+/* =========================
+   ADMIN MISSIONS PAGE
+   ========================= */
+
+.admin-missions-page .mission-form-card,
+.admin-missions-page .mission-manage-card {
+    border-radius: 20px;
+}
+
+.admin-missions-page .form-control,
+.admin-missions-page .form-select,
+.admin-missions-page textarea {
+    border-radius: 12px;
+}
+
+.admin-missions-page textarea {
+    resize: vertical;
+}
+
+.admin-missions-page .btn {
+    border-radius: 12px;
+}

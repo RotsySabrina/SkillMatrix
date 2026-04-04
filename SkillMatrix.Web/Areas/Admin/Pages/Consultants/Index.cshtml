@@ -168,21 +168,27 @@
                                     <td class="text-end pe-4">
                                         <div class="btn-group shadow-sm">
                                             <a asp-page="./Details"
-                                               asp-route-id="@item.Id"
-                                               class="btn btn-white btn-sm border"
-                                               title="Voir profil">
+                                            asp-route-id="@item.Id"
+                                            class="btn btn-white btn-sm border"
+                                            title="Voir profil">
                                                 <i class="bi bi-eye text-info"></i>
                                             </a>
                                             <a asp-page="./Edit"
-                                               asp-route-id="@item.Id"
-                                               class="btn btn-white btn-sm border"
-                                               title="Modifier">
+                                            asp-route-id="@item.Id"
+                                            class="btn btn-white btn-sm border"
+                                            title="Modifier">
                                                 <i class="bi bi-pencil-square text-secondary"></i>
                                             </a>
+                                            <a asp-page="./Missions"
+                                            asp-route-id="@item.Id"
+                                            class="btn btn-white btn-sm border"
+                                            title="Gérer les missions">
+                                                <i class="bi bi-briefcase text-primary"></i>
+                                            </a>
                                             <a asp-page="./Delete"
-                                               asp-route-id="@item.Id"
-                                               class="btn btn-white btn-sm border"
-                                               title="Supprimer">
+                                            asp-route-id="@item.Id"
+                                            class="btn btn-white btn-sm border"
+                                            title="Supprimer">
                                                 <i class="bi bi-trash text-danger"></i>
                                             </a>
                                         </div>

@@ -131,11 +131,11 @@
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                     <div>
                         <h4 class="mb-1">Parcours professionnel</h4>
-                        <p class="text-muted mb-0">
-                            Les missions sont affichées ici en lecture seule pour éviter
-                            de mélanger la gestion du profil et l’historique professionnel.
-                        </p>
                     </div>
+
+                    <a asp-page="./Missions" asp-route-id="@Model.Consultant.Id" class="btn btn-outline-primary">
+                        <i class="bi bi-briefcase me-1"></i> Gérer les missions
+                    </a>
                 </div>
 
                 @if (Model.ExistingMissions != null && Model.ExistingMissions.Any())

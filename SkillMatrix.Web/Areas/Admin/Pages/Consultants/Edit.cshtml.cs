@@ -4,11 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SkillMatrix.Core.DTOs;
 using SkillMatrix.Core.Models;
-using SkillMatrix.Core.ViewModels;
 using SkillMatrix.Data.EF;
 using SkillMatrix.Data.Services;
 
@@ -16,9 +14,10 @@ namespace SkillMatrix.Web.Areas_Admin_Pages_Consultants
 {
     public class EditModel : PageModel
     {
-        private readonly SkillMatrix.Data.EF.ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
         private readonly ElasticSearchService _elasticService;
-        public EditModel(SkillMatrix.Data.EF.ApplicationDbContext context, ElasticSearchService elasticService)
+
+        public EditModel(ApplicationDbContext context, ElasticSearchService elasticService)
         {
             _context = context;
             _elasticService = elasticService;
@@ -26,8 +25,9 @@ namespace SkillMatrix.Web.Areas_Admin_Pages_Consultants
 
         [BindProperty]
         public Consultant Consultant { get; set; } = default!;
-        public ConsultantEditViewModel ViewModel {get; set;} = new();
-        public SelectList ClientOptions{get; set;} = default!;
+
+        public List<Mission> ExistingMissions { get; set; } = new();
+        public List<AssignedSkillData> AssignedSkills { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
@@ -36,40 +36,103 @@ namespace SkillMatrix.Web.Areas_Admin_Pages_Consultants
                 return NotFound();
             }
 
-            var consultant =  await _context.Consultants
+            var consultant = await _context.Consultants
                 .Include(c => c.Missions)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                    .ThenInclude(m => m.Client)
+                .Include(c => c.ConsultantSkills)
+                    .ThenInclude(cs => cs.Skill)
+                .FirstOrDefaultAsync(c => c.Id == id);
 
-            if (consultant == null) return NotFound();
+            if (consultant == null)
+            {
+                return NotFound();
+            }
 
-            ViewModel.Consultant = consultant;
-            ViewModel.ClientsList = await _context.Clients.OrderBy(c =>c.Nom).ToListAsync();
+            ExistingMissions = consultant.Missions
+                .OrderByDescending(m => m.DateDebut)
+                .ToList();
 
-            Consultant = consultant;
-            ClientOptions = new SelectList(ViewModel.ClientsList, "Id", "Nom");
+            PopulateAssignedSkillData(consultant);
+
+            Consultant = new Consultant
+            {
+                Id = consultant.Id,
+                Nom = consultant.Nom,
+                Prenom = consultant.Prenom,
+                Titre = consultant.Titre,
+                ExperienceTotale = consultant.ExperienceTotale,
+                Statut = consultant.Statut
+            };
 
             return Page();
         }
 
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more information, see https://aka.ms/RazorPagesCRUD.
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(string[] selectedSkills, Dictionary<string, string> SkillLevels)
         {
             if (!ModelState.IsValid)
             {
+                await ReloadPageDataAsync(Consultant.Id);
                 return Page();
             }
-            
-            UpdateConsultantStatus(Consultant);
-            _context.Attach(Consultant).State = EntityState.Modified;
+
+            var existingConsultant = await _context.Consultants
+                .Include(c => c.Missions)
+                .Include(c => c.ConsultantSkills)
+                    .ThenInclude(cs => cs.Skill)
+                .FirstOrDefaultAsync(c => c.Id == Consultant.Id);
+
+            if (existingConsultant == null)
+            {
+                return NotFound();
+            }
+
+            existingConsultant.Nom = (Consultant.Nom ?? string.Empty).Trim();
+            existingConsultant.Prenom = (Consultant.Prenom ?? string.Empty).Trim();
+            existingConsultant.Titre = (Consultant.Titre ?? string.Empty).Trim();
+            existingConsultant.ExperienceTotale = Consultant.ExperienceTotale;
+
+            if (existingConsultant.ConsultantSkills != null && existingConsultant.ConsultantSkills.Any())
+            {
+                _context.ConsultantSkills.RemoveRange(existingConsultant.ConsultantSkills);
+            }
+
+            existingConsultant.ConsultantSkills = new List<ConsultantSkill>();
+
+            if (selectedSkills != null)
+            {
+                foreach (var skillIdString in selectedSkills)
+                {
+                    if (int.TryParse(skillIdString, out int skillId))
+                    {
+                        int niveau = 1;
+
+                        if (SkillLevels.TryGetValue(skillIdString, out string? niveauString) &&
+                            int.TryParse(niveauString, out int parsedNiveau))
+                        {
+                            niveau = parsedNiveau;
+                        }
+
+                        existingConsultant.ConsultantSkills.Add(new ConsultantSkill
+                        {
+                            ConsultantId = existingConsultant.Id,
+                            SkillId = skillId,
+                            Niveau = niveau,
+                            DerniereUtilisation = DateTime.Now
+                        });
+                    }
+                }
+            }
+
+            UpdateConsultantStatus(existingConsultant);
 
             try
             {
                 await _context.SaveChangesAsync();
+
                 var updatedConsultant = await _context.Consultants
                     .Include(c => c.ConsultantSkills)
                         .ThenInclude(cs => cs.Skill)
-                    .FirstOrDefaultAsync(c => c.Id == Consultant.Id);
+                    .FirstOrDefaultAsync(c => c.Id == existingConsultant.Id);
 
                 if (updatedConsultant != null)
                 {
@@ -80,11 +143,15 @@ namespace SkillMatrix.Web.Areas_Admin_Pages_Consultants
                         Titre = updatedConsultant.Titre,
                         Statut = updatedConsultant.Statut,
                         Competences = updatedConsultant.ConsultantSkills
-                                        .Select(cs => cs.Skill.Nom).ToList()
+                            .Where(cs => cs.Skill != null)
+                            .Select(cs => cs.Skill!.Nom)
+                            .ToList()
                     };
 
                     await _elasticService.IndexConsultantAsync(searchDto);
                 }
+
+                TempData["SuccessMessage"] = "Consultant mis à jour avec succès.";
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -92,13 +159,47 @@ namespace SkillMatrix.Web.Areas_Admin_Pages_Consultants
                 {
                     return NotFound();
                 }
-                else
-                {
-                    throw;
-                }
+
+                throw;
             }
 
             return RedirectToPage("./Index");
+        }
+
+        private async Task ReloadPageDataAsync(int consultantId)
+        {
+            var consultant = await _context.Consultants
+                .Include(c => c.Missions)
+                    .ThenInclude(m => m.Client)
+                .Include(c => c.ConsultantSkills)
+                    .ThenInclude(cs => cs.Skill)
+                .FirstOrDefaultAsync(c => c.Id == consultantId);
+
+            if (consultant != null)
+            {
+                ExistingMissions = consultant.Missions
+                    .OrderByDescending(m => m.DateDebut)
+                    .ToList();
+
+                PopulateAssignedSkillData(consultant);
+            }
+        }
+
+        private void PopulateAssignedSkillData(Consultant consultant)
+        {
+            var allSkills = _context.Skills.ToList();
+
+            var consultantSkills = consultant.ConsultantSkills?
+                .ToDictionary(cs => cs.SkillId, cs => cs.Niveau)
+                ?? new Dictionary<int, int>();
+
+            AssignedSkills = allSkills.Select(skill => new AssignedSkillData
+            {
+                SkillId = skill.Id,
+                Name = skill.Nom,
+                Assigned = consultantSkills.ContainsKey(skill.Id),
+                Level = consultantSkills.ContainsKey(skill.Id) ? consultantSkills[skill.Id] : 3
+            }).ToList();
         }
 
         private bool ConsultantExists(int id)
@@ -109,11 +210,11 @@ namespace SkillMatrix.Web.Areas_Admin_Pages_Consultants
         private void UpdateConsultantStatus(Consultant consultant)
         {
             var today = DateTime.Today;
-            
-            bool isOnMission = consultant.Missions.Any(m => 
-                m.DateDebut <= today &&             
-                (m.DateFin == null || m.DateFin >= today)
-            );
+            var missions = consultant.Missions ?? new List<Mission>();
+
+            bool isOnMission = missions.Any(m =>
+                m.DateDebut <= today &&
+                (m.DateFin == null || m.DateFin >= today));
 
             if (isOnMission)
             {
@@ -121,8 +222,8 @@ namespace SkillMatrix.Web.Areas_Admin_Pages_Consultants
             }
             else
             {
-                bool aDejaTravaille = consultant.Missions.Any(m => m.DateFin < today);
-                consultant.Statut = aDejaTravaille ? "Intercontrat" : "Disponible";
+                bool hasWorkedBefore = missions.Any(m => m.DateFin != null && m.DateFin < today);
+                consultant.Statut = hasWorkedBefore ? "Intercontrat" : "Disponible";
             }
         }
     }

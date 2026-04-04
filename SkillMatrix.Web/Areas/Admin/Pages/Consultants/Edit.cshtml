@@ -3,172 +3,207 @@
 
 @{
     ViewData["Title"] = "Modifier Consultant";
+
+    var statusClass = Model.Consultant.Statut switch
+    {
+        "Disponible" => "bg-info text-white",
+        "En Mission" => "bg-success",
+        "Intercontrat" => "bg-warning text-dark",
+        _ => "bg-secondary"
+    };
 }
 
-<div class="container pb-5">
-    <h1>Modifier le Profil</h1>
-    <h4>@Model.Consultant.Prenom @Model.Consultant.Nom</h4>
-    <hr />
+<div class="container pb-5 admin-edit-page">
+    <div class="mb-4">
+        <h1 class="fw-bold mb-1">Modifier le profil</h1>
+        <h4 class="text-muted mb-0">@Model.Consultant.Prenom @Model.Consultant.Nom</h4>
+    </div>
 
     <form method="post">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card shadow-sm mb-4">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 admin-edit-card mb-4">
                     <div class="card-header bg-dark text-white">
-                        <h5 class="mb-0">Informations Générales</h5>
+                        <h5 class="mb-0">Informations générales</h5>
                     </div>
+
                     <div class="card-body">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                         <input type="hidden" asp-for="Consultant.Id" />
-                        
+
                         <div class="mb-3">
                             <label asp-for="Consultant.Nom" class="form-label fw-bold"></label>
                             <input asp-for="Consultant.Nom" class="form-control" />
                             <span asp-validation-for="Consultant.Nom" class="text-danger"></span>
                         </div>
+
                         <div class="mb-3">
                             <label asp-for="Consultant.Prenom" class="form-label fw-bold"></label>
                             <input asp-for="Consultant.Prenom" class="form-control" />
                             <span asp-validation-for="Consultant.Prenom" class="text-danger"></span>
                         </div>
+
                         <div class="mb-3">
                             <label asp-for="Consultant.Titre" class="form-label fw-bold"></label>
                             <input asp-for="Consultant.Titre" class="form-control" placeholder="ex: Développeur Fullstack" />
                             <span asp-validation-for="Consultant.Titre" class="text-danger"></span>
                         </div>
+
                         <div class="mb-3">
                             <label asp-for="Consultant.ExperienceTotale" class="form-label fw-bold">Expérience (ans)</label>
                             <input asp-for="Consultant.ExperienceTotale" class="form-control" type="number" />
+                            <span asp-validation-for="Consultant.ExperienceTotale" class="text-danger"></span>
                         </div>
+
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Statut Actuel</label>
-                            <input value="@Model.Consultant.Statut" class="form-control" disabled />
+                            <label class="form-label fw-bold">Statut actuel</label>
+                            <div>
+                                <span class="badge rounded-pill px-3 py-2 @statusClass">
+                                    @Model.Consultant.Statut
+                                </span>
+                            </div>
+                            <div class="small text-muted mt-2">
+                                Le statut est calculé automatiquement à partir des missions déjà enregistrées.
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="mt-3">
-                    <input type="submit" value="Enregistrer les modifications" class="btn btn-primary btn-lg w-100" />
-                    <a asp-page="./Index" class="btn btn-link w-100 mt-2">Retour à la liste</a>
+
+                <div class="card shadow-sm border-0 admin-edit-card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0 fw-bold">
+                            <i class="bi bi-star-fill me-2 text-warning"></i>Compétences & Niveaux
+                        </h5>
+                    </div>
+
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush edit-skills-list">
+                            @for (int i = 0; i < Model.AssignedSkills.Count; i++)
+                            {
+                                <div class="list-group-item py-3">
+                                    <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                                        <div class="form-check">
+                                            <input type="checkbox"
+                                                   name="selectedSkills"
+                                                   value="@Model.AssignedSkills[i].SkillId"
+                                                   id="skill_@Model.AssignedSkills[i].SkillId"
+                                                   class="form-check-input skill-checkbox"
+                                                   @(Model.AssignedSkills[i].Assigned ? "checked" : null) />
+                                            <label class="form-check-label fw-medium" for="skill_@Model.AssignedSkills[i].SkillId">
+                                                @Model.AssignedSkills[i].Name
+                                            </label>
+                                        </div>
+
+                                        <div class="d-flex align-items-center">
+                                            <small class="text-muted me-2">Niveau :</small>
+                                            <input type="range"
+                                                   class="form-range skill-level-range"
+                                                   name="SkillLevels[@Model.AssignedSkills[i].SkillId]"
+                                                   value="@(Model.AssignedSkills[i].Level ?? 1)"
+                                                   min="1" max="5"
+                                                   style="width: 90px;"
+                                                   oninput="this.nextElementSibling.value = this.value" />
+                                            <output class="badge bg-primary ms-2">@(Model.AssignedSkills[i].Level ?? 1)</output>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-light text-center py-2">
+                        <small class="text-muted">Cochez les compétences possédées par le consultant.</small>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check2-circle me-1"></i> Enregistrer les modifications
+                    </button>
+
+                    <a asp-page="./Index" class="btn btn-outline-secondary">
+                        Retour à la liste
+                    </a>
                 </div>
             </div>
 
-            <div class="col-md-8">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="mb-0">Parcours Professionnel</h4>
-                    <button type="button" id="add-mission" class="btn btn-success btn-sm">
-                        <i class="bi bi-plus-circle me-1"></i> Ajouter une mission
-                    </button>
+            <div class="col-lg-8">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h4 class="mb-1">Parcours professionnel</h4>
+                        <p class="text-muted mb-0">
+                            Les missions sont affichées ici en lecture seule pour éviter
+                            de mélanger la gestion du profil et l’historique professionnel.
+                        </p>
+                    </div>
                 </div>
 
-                <div id="missions-container">
-                    @if (Model.Consultant.Missions != null && Model.Consultant.Missions.Any())
-                    {
-                        @for (int i = 0; i < Model.Consultant.Missions.Count; i++)
+                @if (Model.ExistingMissions != null && Model.ExistingMissions.Any())
+                {
+                    <div class="d-grid gap-3">
+                        @foreach (var mission in Model.ExistingMissions)
                         {
-                            <div class="card mb-3 mission-item shadow-sm">
-                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0 text-secondary">Mission existante</h6>
-                                    <span class="badge bg-info">ID: @Model.Consultant.Missions[i].Id</span>
-                                </div>
+                            <div class="card border-0 shadow-sm mission-readonly-card">
                                 <div class="card-body">
-                                    <input type="hidden" asp-for="Consultant.Missions[i].Id" />
-                                    <input type="hidden" asp-for="Consultant.Missions[i].ConsultantId" />
-                                    
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label small fw-bold">Nom du projet</label>
-                                            <input asp-for="Consultant.Missions[i].TitreProjet" class="form-control" />
+                                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                                        <div>
+                                            <h5 class="mb-1 fw-bold">@mission.TitreProjet</h5>
+                                            <div class="text-muted small">
+                                                @(mission.Client?.Nom ?? "Client non renseigné")
+                                            </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label small fw-bold">Client</label>
-                                            <select asp-for="Consultant.Missions[i].ClientId" asp-items="Model.ClientOptions" class="form-select">
-                                                <option value="">-- Sélectionner --</option>
-                                            </select>
-                                        </div>
+
+                                        <span class="badge bg-light text-dark border">
+                                            ID mission : @mission.Id
+                                        </span>
+                                    </div>
+
+                                    <div class="row g-3 small">
                                         <div class="col-md-4">
-                                            <label class="form-label small fw-bold">Date Début</label>
-                                            <input asp-for="Consultant.Missions[i].DateDebut" class="form-control" type="date" />
+                                            <div class="text-muted">Date début</div>
+                                            <div class="fw-semibold">@mission.DateDebut.ToString("dd/MM/yyyy")</div>
                                         </div>
+
                                         <div class="col-md-4">
-                                            <label class="form-label small fw-bold">Date Fin</label>
-                                            <input asp-for="Consultant.Missions[i].DateFin" class="form-control" type="date" />
+                                            <div class="text-muted">Date fin</div>
+                                            <div class="fw-semibold">
+                                                @(mission.DateFin.HasValue ? mission.DateFin.Value.ToString("dd/MM/yyyy") : "En cours")
+                                            </div>
                                         </div>
+
                                         <div class="col-md-4">
-                                            <label class="form-label small fw-bold">Rôle</label>
-                                            <input asp-for="Consultant.Missions[i].RoleOccupe" class="form-control" />
+                                            <div class="text-muted">Rôle</div>
+                                            <div class="fw-semibold">
+                                                @(string.IsNullOrWhiteSpace(mission.RoleOccupe) ? "Non renseigné" : mission.RoleOccupe)
+                                            </div>
                                         </div>
-                                        <div class="col-12">
-                                            <label class="form-label small fw-bold">Description</label>
-                                            <textarea asp-for="Consultant.Missions[i].Description" class="form-control" rows="2"></textarea>
-                                        </div>
+
+                                        @if (!string.IsNullOrWhiteSpace(mission.Description))
+                                        {
+                                            <div class="col-12">
+                                                <div class="text-muted">Description</div>
+                                                <div class="mission-description-readonly">
+                                                    @mission.Description
+                                                </div>
+                                            </div>
+                                        }
                                     </div>
                                 </div>
                             </div>
                         }
-                    }
-                </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-light border rounded-4">
+                        Aucune mission enregistrée pour ce consultant.
+                    </div>
+                }
             </div>
         </div>
     </form>
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync(partialViewName: "_ValidationScriptsPartial");}
-    
-    <script>
-        const btnAdd = document.getElementById('add-mission');
-        const container = document.getElementById('missions-container');
-        
-        // On initialise l'index sur le nombre d'éléments déjà présents
-        let missionIndex = @(Model.Consultant.Missions?.Count ?? 0);
-
-        if (btnAdd) {
-            btnAdd.addEventListener('click', function() {
-                const template = `
-                    <div class="card mb-3 mission-item border-primary shadow-sm">
-                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0"><i class="bi bi-briefcase me-2"></i>Nouvelle Mission</h6>
-                            <button type="button" class="btn-close btn-close-white" onclick="this.closest('.mission-item').remove()"></button>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold">Nom du projet</label>
-                                    <input type="text" name="Consultant.Missions[${missionIndex}].TitreProjet" class="form-control" placeholder="ex: Refonte CRM" required />
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold">Client</label>
-                                    <select name="Consultant.Missions[${missionIndex}].ClientId" class="form-select" required>
-                                        <option value="">-- Sélectionner un client --</option>
-                                        @foreach(var item in Model.ClientOptions) {
-                                            <option value="@item.Value">@item.Text</option>
-                                        }
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-bold">Date Début</label>
-                                    <input type="date" name="Consultant.Missions[${missionIndex}].DateDebut" class="form-control" required />
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-bold">Date Fin (Optionnel)</label>
-                                    <input type="date" name="Consultant.Missions[${missionIndex}].DateFin" class="form-control" />
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-bold">Rôle occupé</label>
-                                    <input type="text" name="Consultant.Missions[${missionIndex}].RoleOccupe" class="form-control" />
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label small fw-bold">Description des réalisations</label>
-                                    <textarea name="Consultant.Missions[${missionIndex}].Description" class="form-control" rows="3"></textarea>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
-
-                container.insertAdjacentHTML('beforeend', template);
-                missionIndex++;
-            });
-        }
-    </script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }

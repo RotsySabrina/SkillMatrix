@@ -5,7 +5,7 @@ namespace SkillMatrix.Core.DTOs
     public class SearchConsultantDto
     {
         public int Id { get; set; }
-        public string NomComplet { get; set; } // Prénom + Nom
+        public string NomComplet { get; set; }
         public string Titre { get; set; }
         public string Statut { get; set; }
 

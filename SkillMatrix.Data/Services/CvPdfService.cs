@@ -75,7 +75,7 @@ namespace SkillMatrix.Data.Services
                                     mCol.Item().Row(row =>
                                     {
                                         row.RelativeItem().Text(mission.TitreProjet).Bold().FontSize(12);
-                                        row.ConstantItem(150).AlignRight().Text($"{mission.DateDebut:MM/yyyy} - {(mission.DateFin.HasValue ? mission.DateFin.Value.ToString("MM/yyyy") : "Prèsent")}").FontSize(10);
+                                        row.ConstantItem(150).AlignRight().Text($"{mission.DateDebut:MM/yyyy} - {(mission.DateFin.HasValue ? mission.DateFin.Value.ToString("MM/yyyy") : "Présent")}").FontSize(10);
                                     });
 
                                     mCol.Item().Text($"{mission.Client?.Nom} | {mission.RoleOccupe}").Italic().FontColor(Colors.Grey.Darken2);
@@ -96,7 +96,7 @@ namespace SkillMatrix.Data.Services
                     // --- 3. PIED DE PAGE ---
                     page.Footer().AlignCenter().Text(x =>
                     {
-                        x.Span("SkillMatrix - Document confidentiel - Page ");
+                        x.Span("TalentTris - Document confidentiel - Page ");
                         x.CurrentPageNumber();
                     });
                 });

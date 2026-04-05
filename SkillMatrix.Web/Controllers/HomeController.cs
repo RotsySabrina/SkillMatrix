@@ -48,7 +48,7 @@ public class HomeController : Controller
         return View();
     }
 
-    public async Task<IActionResult> ConsultantsList(string searchQuery, int page = 1, int pageSize = 9)
+    public async Task<IActionResult> ConsultantsList(string searchQuery, int page = 1, int pageSize = 3)
     {
         var viewModel = new ConsultantListViewModel
         {

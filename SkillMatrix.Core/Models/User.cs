@@ -4,9 +4,9 @@ namespace SkillMatrix.Core.Models
     {
         public int Id { get; set; }
         public string Email { get; set; } = "";
-        public string PasswordHash { get; set; } = ""; // On ne stocke JAMAIS le mot de passe en clair
+        public string PasswordHash { get; set; } = "";
         public string NomComplet { get; set; } = "";
-        public string Role { get; set; } = "User"; // Admin, Recruteur, User
+        public string Role { get; set; } = "User";
         public DateTime DateCreation { get; set; } = DateTime.Now;
     }
 }

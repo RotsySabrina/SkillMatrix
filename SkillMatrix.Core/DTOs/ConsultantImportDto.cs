@@ -7,8 +7,6 @@ namespace SkillMatrix.Core.DTOs
         public string Titre { get; set; }
         public int ExperienceTotale { get; set; }
         public string Statut { get; set; }
-        
-        // Cette colonne contiendra "C#|3;Azure|2"
         public string CompetencesString { get; set; } 
     }
 }
